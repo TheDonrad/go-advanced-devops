@@ -107,6 +107,7 @@ func setMetrics(metrics *metricsList, memStats runtime.MemStats) {
 }
 
 func calculateMetrics(metrics *metricsList) {
+	metrics.Alloc = metrics.Alloc / gauge(metrics.PollCount)
 	metrics.BuckHashSys = metrics.BuckHashSys / gauge(metrics.PollCount)
 	metrics.Frees = metrics.Frees / gauge(metrics.PollCount)
 	metrics.GCCPUFraction = metrics.GCCPUFraction / gauge(metrics.PollCount)
