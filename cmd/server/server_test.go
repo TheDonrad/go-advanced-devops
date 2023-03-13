@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,7 +54,8 @@ func TestWriteMetric(t *testing.T) {
 			h(w, request)
 			result := w.Result()
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-			result.Body.Close()
+			err := result.Body.Close()
+			require.NoError(t, err)
 		})
 	}
 }
