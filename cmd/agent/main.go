@@ -164,7 +164,7 @@ func sendMetrics(metrics metricsList) {
 		}
 		request.Header.Add("Content-Type", "text/plain")
 		response, err := client.Do(request)
-		defer response.Body.Close()
+		response.Body.Close()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
