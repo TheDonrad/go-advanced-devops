@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -97,21 +96,21 @@ func writeMetric(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func setValue(metricName string, value gauge) {
-	// pointer to struct - addressable
-	ps := reflect.ValueOf(&metrics)
-	// struct
-	s := ps.Elem()
-	if s.Kind() == reflect.Struct {
-		// exported field
-		f := s.FieldByName(metricName)
-		if f.IsValid() {
-			// A Value can be changed only if it is
-			// addressable and was not obtained by
-			// the use of unexported struct fields.
-			if f.CanSet() {
-				//f.SetInt(value)
-			}
-		}
-	}
-}
+//func setValue(metricName string, value gauge) {
+//	// pointer to struct - addressable
+//	ps := reflect.ValueOf(&metrics)
+//	// struct
+//	s := ps.Elem()
+//	if s.Kind() == reflect.Struct {
+//		// exported field
+//		f := s.FieldByName(metricName)
+//		if f.IsValid() {
+//			// A Value can be changed only if it is
+//			// addressable and was not obtained by
+//			// the use of unexported struct fields.
+//			if f.CanSet() {
+//				//f.SetInt(value)
+//			}
+//		}
+//	}
+//}
