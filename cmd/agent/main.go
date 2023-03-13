@@ -61,7 +61,7 @@ func main() {
 		setMetrics(&metrics, memStats)
 		fmt.Println("met")
 
-		if time.Duration(time.Now().Sub(startTime)) >= reportInterval {
+		if time.Duration(time.Since(startTime)) >= reportInterval {
 			fmt.Println("send")
 			calculateMetrics(&metrics)
 			sendMetrics(metrics)
@@ -163,7 +163,8 @@ func sendMetrics(metrics metricsList) {
 			os.Exit(1)
 		}
 		request.Header.Add("Content-Type", "text/plain")
-		_, err = client.Do(request)
+		response, err := client.Do(request)
+		defer response.Body.Close()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)

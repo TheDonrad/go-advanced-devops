@@ -53,6 +53,7 @@ func TestWriteMetric(t *testing.T) {
 			h(w, request)
 			result := w.Result()
 			assert.Equal(t, tt.want.statusCode, result.StatusCode)
+			result.Body.Close()
 		})
 	}
 }
