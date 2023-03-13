@@ -168,7 +168,11 @@ func sendMetrics(metrics metricsList) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		response.Body.Close()
+		err = response.Body.Close()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }
 
