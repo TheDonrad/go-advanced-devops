@@ -30,3 +30,20 @@ git fetch template && git checkout template/main .github
 ```
 
 Затем добавьте полученные изменения в свой репозиторий.
+
+
+
+// https://golangci-lint.run/usage/install/
+//
+//C:/Golang/devopstest.exe
+//-test.v -test.run=^TestIteration2[b]*$
+//-binary-path=C:\Golang\go-advanced-devops-tpl\cmd\server\server.exe
+//-source-path=C:\Golang\go-advanced-devops-tpl\cmd\server
+//
+//go build -race ./
+//
+//c:\apps\devopstest-windows-amd64.exe
+//--test.v
+//--test.run=^TestIteration2$
+//--binary-path=./cmd/server/server.exe
+//--agent-binary-path=./cmd/agent/agent.exe

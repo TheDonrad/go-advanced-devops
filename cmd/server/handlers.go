@@ -1,104 +1,183 @@
-package main
+package server
 
 import (
+	"fmt"
+	"github.com/go-chi/chi/v5"
+	"html/template"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func writeMetric(w http.ResponseWriter, r *http.Request) {
-	path := strings.Split(r.RequestURI, "/")
-	if len(path) != 5 {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	metricType := path[2]
-	metricName := path[3]
-	metricValue := path[4]
+
+	metricType := chi.URLParam(r, "metricType")
+	metricName := chi.URLParam(r, "metricName")
+	metricValue := chi.URLParam(r, "metricValue")
 	switch metricType {
 	case "gauge":
 		valueFloat, _ := strconv.ParseFloat(metricValue, 64)
-		value := gauge(valueFloat)
+		value := Gauge(valueFloat)
 		switch metricName {
 		case "Alloc":
-			metrics.Alloc = value
+			Metrics.Alloc = value
 		case "BuckHashSys":
-			metrics.BuckHashSys = value
+			Metrics.BuckHashSys = value
 		case "Frees":
-			metrics.Frees = value
+			Metrics.Frees = value
 		case "GCCPUFraction":
-			metrics.GCCPUFraction = value
+			Metrics.GCCPUFraction = value
 		case "GCSys":
-			metrics.GCSys = value
+			Metrics.GCSys = value
 		case "HeapAlloc":
-			metrics.HeapAlloc = value
+			Metrics.HeapAlloc = value
 		case "HeapIdle":
-			metrics.HeapIdle = value
+			Metrics.HeapIdle = value
 		case "HeapInuse":
-			metrics.HeapInuse = value
+			Metrics.HeapInuse = value
 		case "HeapObjects":
-			metrics.HeapObjects = value
+			Metrics.HeapObjects = value
 		case "HeapReleased":
-			metrics.HeapReleased = value
+			Metrics.HeapReleased = value
 		case "HeapSys":
-			metrics.HeapSys = value
+			Metrics.HeapSys = value
 		case "LastGC":
-			metrics.LastGC = value
+			Metrics.LastGC = value
 		case "Lookups":
-			metrics.Lookups = value
+			Metrics.Lookups = value
 		case "MCacheInuse":
-			metrics.MCacheInuse = value
+			Metrics.MCacheInuse = value
 		case "MCacheSys":
-			metrics.MCacheSys = value
+			Metrics.MCacheSys = value
 		case "MSpanInuse":
-			metrics.MSpanInuse = value
+			Metrics.MSpanInuse = value
 		case "MSpanSys":
-			metrics.MSpanSys = value
+			Metrics.MSpanSys = value
 		case "Mallocs":
-			metrics.Mallocs = value
+			Metrics.Mallocs = value
 		case "NextGC":
-			metrics.NextGC = value
+			Metrics.NextGC = value
 		case "NumForcedGC":
-			metrics.NumForcedGC = value
+			Metrics.NumForcedGC = value
 		case "NumGC":
-			metrics.NumGC = value
+			Metrics.NumGC = value
 		case "OtherSys":
-			metrics.OtherSys = value
+			Metrics.OtherSys = value
 		case "PauseTotalNs":
-			metrics.PauseTotalNs = value
+			Metrics.PauseTotalNs = value
 		case "StackInuse":
-			metrics.StackInuse = value
+			Metrics.StackInuse = value
 		case "StackSys":
-			metrics.StackSys = value
+			Metrics.StackSys = value
 		case "Sys":
-			metrics.Sys = value
+			Metrics.Sys = value
 		case "TotalAlloc":
-			metrics.TotalAlloc = value
+			Metrics.TotalAlloc = value
 		case "RandomValue":
-			metrics.RandomValue = value
+			Metrics.RandomValue = value
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		//setValue(metricName, value)
+	//setValue(metricName, value)
 	case "counter":
 		valueInt, _ := strconv.ParseInt(metricValue, 0, 8)
-		value := counter(valueInt)
+		value := Counter(valueInt)
 		switch metricName {
 		case "PollCount":
-			metrics.PollCount = value
-
+			Metrics.PollCount = value
 		default:
 			w.WriteHeader(http.StatusBadRequest)
 		}
-		//setValue(metricName, value)
+	//setValue(metricName, value)
+	default:
+		w.WriteHeader(http.StatusBadRequest)
 	}
-
 	w.WriteHeader(http.StatusOK)
 }
 
-//func setValue(metricName string, value gauge) {
+func GetMetric(w http.ResponseWriter, r *http.Request) {
+	metricType := chi.URLParam(r, "metricType")
+	metricName := chi.URLParam(r, "metricName")
+	metricValue, err := Metrics.getStringValue(metricType, metricName)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	_, err = w.Write([]byte(metricValue))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func AllMetrics(w http.ResponseWriter, _ *http.Request) {
+	content := pageTemplate()
+
+	tmpl, err := template.New("metrics_page").Parse(content)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "Metrics", Metrics)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, content)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func pageTemplate() string {
+	content := `
+		{{define "Metrics"}}
+		<html lang="ru">
+		<head>
+			<meta charset="UTF-8">
+			<title>Metrics</title>
+		</head>
+		<body>
+			<table class="table">
+			<th>metric</th>
+			<th>value</th>
+			<tr><td>Alloc</td><td>{{.Alloc}}</td></tr>
+			<tr><td>BuckHashSys</td><td>{{.BuckHashSys}}</td></tr>
+			<tr><td>Frees</td><td>{{.Frees}}</td></tr>
+			<tr><td>GCCPUFraction</td><td>{{.GCCPUFraction}}</td></tr>
+			<tr><td>GCSys</td><td>{{.GCSys}}</td></tr>
+			<tr><td>HeapAlloc</td><td>{{.HeapAlloc}}</td></tr>
+			<tr><td>HeapIdle</td><td>{{.HeapIdle}}</td></tr>
+			<tr><td>HeapInuse</td><td>{{.HeapInuse}}</td></tr>
+			<tr><td>HeapObjects</td><td>{{.HeapObjects}}</td></tr>
+			<tr><td>HeapReleased</td><td>{{.HeapReleased}}</td></tr>
+			<tr><td>HeapSys</td><td>{{.HeapSys}}</td></tr>
+			<tr><td>LastGC</td><td>{{.LastGC}}</td></tr>
+			<tr><td>Lookups</td><td>{{.Lookups}}</td></tr>
+			<tr><td>MCacheInuse</td><td>{{.MCacheInuse}}</td></tr>
+			<tr><td>MCacheSys</td><td>{{.MCacheSys}}</td></tr>
+			<tr><td>MSpanInuse</td><td>{{.MSpanInuse}}</td></tr>
+			<tr><td>MSpanSys</td><td>{{.MSpanSys}}</td></tr>
+			<tr><td>Mallocs</td><td>{{.Mallocs}}</td></tr>
+			<tr><td>NextGC</td><td>{{.NextGC}}</td></tr>
+			<tr><td>NumForcedGC</td><td>{{.NumForcedGC}}</td></tr>
+			<tr><td>NumGC</td><td>{{.NumGC}}</td></tr>
+			<tr><td>OtherSys</td><td>{{.OtherSys}}</td></tr>
+			<tr><td>PauseTotalNs</td><td>{{.PauseTotalNs}}</td></tr>
+			<tr><td>StackInuse</td><td>{{.StackInuse}}</td></tr>
+			<tr><td>StackSys</td><td>{{.StackSys}}</td></tr>
+			<tr><td>Sys</td><td>{{.Sys}}</td></tr>
+			<tr><td>TotalAlloc</td><td>{{.TotalAlloc}}</td></tr>
+			<tr><td>RandomValue</td><td>{{.RandomValue}}</td></tr>
+			{{end}}
+		</table>
+		</body>
+		</html>`
+	return content
+}
+
+//func setValue(metricName string, value Gauge) {
 //	// pointer to struct - addressable
-//	ps := reflect.ValueOf(&metrics)
+//	ps := reflect.ValueOf(&Metrics)
 //	// struct
 //	s := ps.Elem()
 //	if s.Kind() == reflect.Struct {
