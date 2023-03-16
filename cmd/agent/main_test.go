@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCalculateMetrics(t *testing.T) {
@@ -19,7 +20,7 @@ func TestCalculateMetrics(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			calculateMetrics(&tt.metrics)
+			tt.metrics.CalculateMetrics()
 			assert.Equal(t, tt.want, tt.metrics.Alloc)
 		})
 	}

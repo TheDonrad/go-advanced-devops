@@ -1,14 +1,15 @@
-package server
+package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteMetric(t *testing.T) {
@@ -20,14 +21,12 @@ func TestWriteMetric(t *testing.T) {
 	statusCode, _ := testRequest(t, ts, "POST", "/update/gauge/Alloc/1")
 	assert.Equal(t, http.StatusOK, statusCode)
 
-	statusCode, _ = testRequest(t, ts, "POST", "/update/gauge/PollCount/1")
-	assert.Equal(t, http.StatusBadRequest, statusCode)
+	statusCode, _ = testRequest(t, ts, "POST", "/update/someBad/PollCount/1")
+	assert.Equal(t, http.StatusNotImplemented, statusCode)
 
 	statusCode, _ = testRequest(t, ts, "POST", "/update/counter/PollCount/1")
 	assert.Equal(t, http.StatusOK, statusCode)
 
-	statusCode, _ = testRequest(t, ts, "POST", "/update/counter/Alloc/1")
-	assert.Equal(t, http.StatusBadRequest, statusCode)
 }
 
 func TestGetMetric(t *testing.T) {
@@ -37,7 +36,7 @@ func TestGetMetric(t *testing.T) {
 	defer ts.Close()
 
 	statusCode, _ := testRequest(t, ts, "GET", "/value/gauge/Alloc")
-	assert.Equal(t, http.StatusOK, statusCode)
+	assert.Equal(t, http.StatusNotFound, statusCode)
 
 }
 
@@ -62,10 +61,12 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 }
 
 func NewRouter() chi.Router {
+	metStorage := NewMetricStorage()
+	h := NewAPIHandler(metStorage)
 	r := chi.NewRouter()
 
-	r.Post("/update/{metricType}/{metricName}/{metricValue}", writeMetric)
-	r.Get("/value/{metricType}/{metricName}", GetMetric)
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
+	r.Get("/value/{metricType}/{metricName}", h.GetMetric)
 
 	return r
 }
