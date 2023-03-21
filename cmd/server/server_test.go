@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"goAdvancedTpl/internal/server/handlers"
+	"goAdvancedTpl/internal/server/storage"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -61,8 +63,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 }
 
 func NewRouter() chi.Router {
-	metStorage := NewMetricStorage()
-	h := NewAPIHandler(metStorage)
+	metStorage := storage.NewMetricStorage()
+	h := handlers.NewAPIHandler(metStorage)
 	r := chi.NewRouter()
 
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", h.WriteMetric)

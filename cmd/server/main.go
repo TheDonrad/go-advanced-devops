@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
+	"goAdvancedTpl/internal/server/handlers"
+	"goAdvancedTpl/internal/server/storage"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
-	metStorage := NewMetricStorage()
-	h := NewAPIHandler(metStorage)
+	metStorage := storage.NewMetricStorage()
+	h := handlers.NewAPIHandler(metStorage)
 	r := chi.NewRouter()
 
 	r.Route("/update", func(r chi.Router) {
