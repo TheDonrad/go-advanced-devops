@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"goAdvancedTpl/internal/agent/collector"
+	"goAdvancedTpl/internal/agent/sender"
 	"runtime"
 	"time"
 )
@@ -11,7 +13,7 @@ func main() {
 	pollInterval := 2 * time.Second
 	reportInterval := 5 * time.Second
 
-	metrics := NewMetrics()
+	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
 	startTime := time.Now()
 	for {
@@ -19,7 +21,7 @@ func main() {
 
 		if time.Since(startTime) >= reportInterval {
 			metrics.CalculateMetrics()
-			err := SendMetrics(metrics)
+			err := sender.SendMetrics(metrics)
 			if err != nil {
 				fmt.Println(err.Error())
 			}

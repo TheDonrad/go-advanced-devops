@@ -1,6 +1,7 @@
 package main
 
 import (
+	"goAdvancedTpl/internal/agent/collector"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,13 +10,13 @@ import (
 func TestCalculateMetrics(t *testing.T) {
 	tests := []struct {
 		name    string
-		metrics metricsList
-		want    gauge
+		metrics collector.MetricsList
+		want    collector.Gauge
 	}{
 		{
 			name:    "calc",
-			want:    gauge(5),
-			metrics: metricsList{Alloc: gauge(10), PollCount: counter(2)},
+			want:    collector.Gauge(5),
+			metrics: collector.MetricsList{Alloc: collector.Gauge(10), PollCount: collector.Counter(2)},
 		},
 	}
 	for _, tt := range tests {
