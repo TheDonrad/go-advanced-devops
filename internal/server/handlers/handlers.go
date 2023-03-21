@@ -14,8 +14,8 @@ type metricsHandlers interface {
 	AddCounter(metricName string, value int64)
 	GetValue(metricType string, metricName string) (string, error)
 	Render(w http.ResponseWriter) error
-	GetIntValue(metricType string, metricName string) (value int64, err error)
-	GetFloatValue(metricType string, metricName string) (value float64, err error)
+	GetIntValue(metricName string) (value int64, err error)
+	GetFloatValue(metricName string) (value float64, err error)
 }
 
 type Metric struct {
@@ -116,9 +116,9 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	}
 	switch met.MType {
 	case "gauge":
-		met.Value, err = h.metrics.GetFloatValue(met.MType, met.ID)
+		met.Value, err = h.metrics.GetFloatValue(met.ID)
 	case "counter":
-		met.Delta, err = h.metrics.GetIntValue(met.MType, met.ID)
+		met.Delta, err = h.metrics.GetIntValue(met.ID)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return

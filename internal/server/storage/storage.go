@@ -26,7 +26,7 @@ func (m MetricStorage) AddCounter(metricName string, value int64) {
 	m.Counter[metricName] += value
 }
 
-func (m MetricStorage) GetIntValue(metricType string, metricName string) (value int64, err error) {
+func (m MetricStorage) GetIntValue(metricName string) (value int64, err error) {
 	value, ok := m.Counter[metricName]
 	if !ok {
 		err = errors.New("no such metric")
@@ -34,7 +34,7 @@ func (m MetricStorage) GetIntValue(metricType string, metricName string) (value 
 	return
 }
 
-func (m MetricStorage) GetFloatValue(metricType string, metricName string) (value float64, err error) {
+func (m MetricStorage) GetFloatValue(metricName string) (value float64, err error) {
 	value, ok := m.Gauge[metricName]
 	if !ok {
 		err = errors.New("no such metric")
