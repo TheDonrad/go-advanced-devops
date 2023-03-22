@@ -6,7 +6,6 @@ import (
 	"goAdvancedTpl/internal/agent/collector"
 	"goAdvancedTpl/internal/agent/sender"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -30,25 +29,23 @@ func main() {
 		addr = cfg.Addr
 	}
 
-	i := 2
+	pollInterval := 2 * time.Second
 	if len(strings.TrimSpace(cfg.PollInterval)) != 0 {
-		i, err = strconv.Atoi(cfg.PollInterval)
+		pollInterval, err = time.ParseDuration(cfg.PollInterval)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 	}
-	pollInterval := time.Duration(i) * time.Second
 
-	j := 5
+	reportInterval := 5 * time.Second
 	if len(strings.TrimSpace(cfg.ReportInterval)) != 0 {
-		j, err = strconv.Atoi(cfg.ReportInterval)
+		reportInterval, err = time.ParseDuration(cfg.ReportInterval)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 	}
-	reportInterval := time.Duration(j) * time.Second
 
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
