@@ -18,6 +18,7 @@ func NewMetricStorage() *MetricStorage {
 		Counter: make(map[string]int64),
 	}
 }
+
 func (m MetricStorage) AddGauge(metricName string, value float64) {
 	m.Gauge[metricName] = value
 }
@@ -93,16 +94,16 @@ func pageTemplate() string {
 				</tr>
 			</thead>
 			<tbody>
-				{{range $teacher, $rows := .Gauge }}
+				{{range $metric, $value := .Gauge }}
 				<tr>
-					<td>{{ $teacher }}</td>
-					<td>{{ $rows }}</td>
+					<td>{{ $metric }}</td>
+					<td>{{ $value }}</td>
 				</tr>
 				{{ end }}
-				{{range $teacher, $rows := .Counter }}
+				{{range $metric, $value := .Counter }}
 				<tr>
-					<td>{{ $teacher }}</td>
-					<td>{{ $rows }}</td>
+					<td>{{ $metric }}</td>
+					<td>{{ $value }}</td>
 				</tr>
 				{{ end }}
 			</tbody>
