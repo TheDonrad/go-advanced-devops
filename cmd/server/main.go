@@ -67,7 +67,7 @@ func srvConfig() serverConfig {
 		storeFile:     "/tmp/devops-metrics-db.json",
 		restore:       true,
 	}
-	srvConfig.setConfigEnv()
+	srvConfig.setConfigFlags()
 	srvConfig.setConfigEnv()
 
 	return srvConfig
