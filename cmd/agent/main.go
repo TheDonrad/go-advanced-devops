@@ -61,7 +61,7 @@ func main() {
 		setMetrics(&metrics, memStats)
 		fmt.Println("met")
 
-		if time.Duration(time.Now().Sub(startTime)) >= reportInterval {
+		if time.Since(startTime) >= reportInterval {
 			fmt.Println("send")
 			calculateMetrics(&metrics)
 			sendMetrics(metrics)
@@ -107,6 +107,7 @@ func setMetrics(metrics *metricsList, memStats runtime.MemStats) {
 }
 
 func calculateMetrics(metrics *metricsList) {
+	metrics.Alloc = metrics.Alloc / gauge(metrics.PollCount)
 	metrics.BuckHashSys = metrics.BuckHashSys / gauge(metrics.PollCount)
 	metrics.Frees = metrics.Frees / gauge(metrics.PollCount)
 	metrics.GCCPUFraction = metrics.GCCPUFraction / gauge(metrics.PollCount)
@@ -162,12 +163,16 @@ func sendMetrics(metrics metricsList) {
 			os.Exit(1)
 		}
 		request.Header.Add("Content-Type", "text/plain")
-		_, err = client.Do(request)
+		response, err := client.Do(request)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-
+		err = response.Body.Close()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }
 
