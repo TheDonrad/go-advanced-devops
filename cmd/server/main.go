@@ -2,53 +2,28 @@ package main
 
 import (
 	"fmt"
+	"goAdvancedTpl/internal/server/handlers"
+	"goAdvancedTpl/internal/server/storage"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 )
-
-type (
-	gauge   float64
-	counter int64
-)
-
-type MemStorage struct {
-	Alloc         gauge
-	BuckHashSys   gauge
-	Frees         gauge
-	GCCPUFraction gauge
-	GCSys         gauge
-	HeapAlloc     gauge
-	HeapIdle      gauge
-	HeapInuse     gauge
-	HeapObjects   gauge
-	HeapReleased  gauge
-	HeapSys       gauge
-	LastGC        gauge
-	Lookups       gauge
-	MCacheInuse   gauge
-	MCacheSys     gauge
-	MSpanInuse    gauge
-	MSpanSys      gauge
-	Mallocs       gauge
-	NextGC        gauge
-	NumForcedGC   gauge
-	NumGC         gauge
-	OtherSys      gauge
-	PauseTotalNs  gauge
-	StackInuse    gauge
-	StackSys      gauge
-	Sys           gauge
-	TotalAlloc    gauge
-	PollCount     counter
-	RandomValue   gauge
-}
-
-var metrics MemStorage
 
 func main() {
-	// маршрутизация запросов обработчику
-	http.HandleFunc("/update/", writeMetric)
-	// запуск сервера с адресом localhost, порт 8080
-	er := http.ListenAndServe(":8080", nil)
+	metStorage := storage.NewMetricStorage()
+	h := handlers.NewAPIHandler(metStorage)
+	r := chi.NewRouter()
+
+	r.Route("/update", func(r chi.Router) {
+		r.Post("/", h.WriteWholeMetric)
+		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
+	})
+	r.Route("/value", func(r chi.Router) {
+		r.Post("/", h.GetWholeMetric)
+		r.Get("/{metricType}/{metricName}", h.GetMetric)
+	})
+	r.Get("/", h.AllMetrics)
+	er := http.ListenAndServe(":8080", r)
 	if er != nil {
 		fmt.Println(er.Error())
 	}

@@ -1,61 +1,74 @@
 package main
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"fmt"
+	"goAdvancedTpl/internal/server/handlers"
+	"goAdvancedTpl/internal/server/storage"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWriteMetric(t *testing.T) {
-	type want struct {
-		statusCode int
-	}
-	tests := []struct {
-		name    string
-		request string
-		want    want
-	}{
-		{
-			name: "gauge normal",
-			want: want{
-				statusCode: 200,
-			},
-			request: "/update/gauge/Alloc/1",
-		},
-		{
-			name: "gauge bad",
-			want: want{
-				statusCode: 400,
-			},
-			request: "/update/gauge/PollCount/1",
-		},
-		{
-			name: "counter normal",
-			want: want{
-				statusCode: 200,
-			},
-			request: "/update/counter/PollCount/1",
-		},
-		{
-			name: "counter bad",
-			want: want{
-				statusCode: 400,
-			},
-			request: "/update/counter/Alloc/1",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, tt.request, nil)
-			w := httptest.NewRecorder()
-			h := http.HandlerFunc(writeMetric)
-			h(w, request)
-			result := w.Result()
-			assert.Equal(t, tt.want.statusCode, result.StatusCode)
-			err := result.Body.Close()
-			require.NoError(t, err)
-		})
-	}
+
+	r := NewRouter()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	statusCode, _ := testRequest(t, ts, "POST", "/update/gauge/Alloc/1")
+	assert.Equal(t, http.StatusOK, statusCode)
+
+	statusCode, _ = testRequest(t, ts, "POST", "/update/someBad/PollCount/1")
+	assert.Equal(t, http.StatusNotImplemented, statusCode)
+
+	statusCode, _ = testRequest(t, ts, "POST", "/update/counter/PollCount/1")
+	assert.Equal(t, http.StatusOK, statusCode)
+
+}
+
+func TestGetMetric(t *testing.T) {
+
+	r := NewRouter()
+	ts := httptest.NewServer(r)
+	defer ts.Close()
+
+	statusCode, _ := testRequest(t, ts, "GET", "/value/gauge/Alloc")
+	assert.Equal(t, http.StatusNotFound, statusCode)
+
+}
+
+func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, string) {
+	req, err := http.NewRequest(method, ts.URL+path, nil)
+	require.NoError(t, err)
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	respBody, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
+	defer func() {
+		err = resp.Body.Close()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+
+	return resp.StatusCode, string(respBody)
+}
+
+func NewRouter() chi.Router {
+	metStorage := storage.NewMetricStorage()
+	h := handlers.NewAPIHandler(metStorage)
+	r := chi.NewRouter()
+
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
+	r.Get("/value/{metricType}/{metricName}", h.GetMetric)
+
+	return r
 }

@@ -1,4 +1,4 @@
-# go-musthave-devops-tpl
+# go-mustHave-devops-tpl
 
 Шаблон репозитория для практического трека «Go в DevOps».
 
@@ -30,3 +30,7 @@ git fetch template && git checkout template/main .github
 ```
 
 Затем добавьте полученные изменения в свой репозиторий.
+
+
+
+// https://golangci-lint.run/usage/install/
