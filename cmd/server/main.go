@@ -23,7 +23,7 @@ type envConfig struct {
 
 type serverConfig struct {
 	addr          string
-	storeInterval int
+	storeInterval time.Duration
 	storeFile     string
 	restore       bool
 }
@@ -89,7 +89,7 @@ func srvConfig() (serverConfig, error) {
 	}
 
 	if len(strings.TrimSpace(cfg.StoreInterval)) != 0 {
-		srvConfig.storeInterval, err = strconv.Atoi(cfg.StoreInterval)
+		srvConfig.storeInterval, err = time.ParseDuration(cfg.StoreInterval)
 		if err != nil {
 			return srvConfig, err
 		}

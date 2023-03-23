@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func (m MetricStorage) Restore(restore bool, savingSettings *SavingSettings, metStorage *MetricStorage) {
+func (m *MetricStorage) Restore(restore bool, savingSettings *SavingSettings, metStorage *MetricStorage) {
 	if !restore {
 		return
 	}
@@ -18,7 +18,12 @@ func (m MetricStorage) Restore(restore bool, savingSettings *SavingSettings, met
 		fmt.Println(err.Error())
 		return
 	}
-	defer consumer.Close()
+	defer func() {
+		err = consumer.Close()
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
 	err = consumer.readEvent(metStorage)
 	if err != nil {
 		fmt.Println(err.Error())
