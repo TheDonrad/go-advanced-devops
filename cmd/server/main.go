@@ -74,7 +74,7 @@ func srvConfig() (serverConfig, error) {
 	srvConfig := serverConfig{
 		addr:          "127.0.0.1:8080",
 		storeInterval: 300,
-		storeFile:     "C:/golang/go-advanced-devops-tpl/tmp/devops-metrics-db.json",
+		storeFile:     "/tmp/devops-metrics-db.json",
 		restore:       true,
 	}
 
