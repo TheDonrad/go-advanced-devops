@@ -139,6 +139,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
 	err := h.metrics.Render(w)
+	w.Header().Add("Content-Type", "text/html")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

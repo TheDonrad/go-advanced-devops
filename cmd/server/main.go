@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5/middleware"
 	"goAdvancedTpl/internal/server/handlers"
-	"goAdvancedTpl/internal/server/serverMiddleware"
+	"goAdvancedTpl/internal/server/servermiddleware"
 	"goAdvancedTpl/internal/server/storage"
 	"net/http"
 	"time"
@@ -38,7 +38,7 @@ func routers(metStorage *storage.MetricStorage) *chi.Mux {
 	h := handlers.NewAPIHandler(metStorage)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
-	r.Use(serverMiddleware.GzipHandle)
+	r.Use(servermiddleware.GzipHandle)
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/", h.WriteWholeMetric)
 		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
