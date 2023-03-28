@@ -16,7 +16,7 @@ type Mets struct {
 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 }
 
-func SendMetrics(metrics interface{}) (err error) {
+func SendMetrics(addr string, metrics interface{}) (err error) {
 
 	client := &http.Client{}
 	values := reflect.ValueOf(metrics)
@@ -50,7 +50,7 @@ func SendMetrics(metrics interface{}) (err error) {
 			}
 		}
 		endpoint := fmt.Sprintf("http://%s/update/%s/%s/%s",
-			"127.0.0.1:8080", t, typeOf.Elem().Field(i).Name, v)
+			addr, t, typeOf.Elem().Field(i).Name, v)
 		request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(""))
 		if err != nil {
 			return err
@@ -64,7 +64,7 @@ func SendMetrics(metrics interface{}) (err error) {
 		if err != nil {
 			return err
 		}
-		endpoint = fmt.Sprintf("http://%s/update/", "127.0.0.1:8080")
+		endpoint = fmt.Sprintf("http://%s/update/", addr)
 		b, _ := json.Marshal(met)
 		request, err = http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
 		if err != nil {
