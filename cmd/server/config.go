@@ -20,7 +20,7 @@ type serverConfig struct {
 func srvConfig() serverConfig {
 	srvConfig := serverConfig{
 		addr:          "127.0.0.1:8080",
-		storeInterval: 300,
+		storeInterval: 300 * time.Second,
 		storeFile:     "/tmp/devops-metrics-db.json",
 		restore:       true,
 	}
