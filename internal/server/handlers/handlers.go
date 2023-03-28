@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -64,7 +65,7 @@ func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	met := Metric{}
-	if err := json.NewDecoder(r.Body).Decode(&met); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -110,7 +111,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	met := Metric{}
-	if err = json.NewDecoder(r.Body).Decode(&met); err != nil {
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -138,6 +139,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
+	w.Header().Add("Content-Type", "text/html")
 	err := h.metrics.Render(w)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
