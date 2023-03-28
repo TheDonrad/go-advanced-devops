@@ -9,14 +9,15 @@ import (
 	"strconv"
 )
 
-type Mets struct {
+type Metric struct {
 	ID    string  `json:"id"`              // имя метрики
 	MType string  `json:"type"`            // параметр, принимающий значение gauge или counter
 	Delta int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
 
-func SendMetrics(addr string, metrics interface{}) (err error) {
+func SendMetrics(addr string, metrics interface{}, key string) (err error) {
 
 	client := &http.Client{}
 	values := reflect.ValueOf(metrics)
@@ -32,23 +33,26 @@ func SendMetrics(addr string, metrics interface{}) (err error) {
 			v = strconv.FormatInt(value.Int(), 10)
 		}
 		var t string
-		var met Mets
+		var met Metric
 		switch typeOf.Elem().Field(i).Type.String() {
 		case "collector.Gauge":
 			t = "gauge"
-			met = Mets{
+			met = Metric{
 				ID:    typeOf.Elem().Field(i).Name,
 				MType: t,
 				Value: value.Float(),
 			}
+			calcGaugeHash(&met, key)
 		default:
 			t = "counter"
-			met = Mets{
+			met = Metric{
 				ID:    typeOf.Elem().Field(i).Name,
 				MType: t,
 				Delta: value.Int(),
 			}
+			calcCounterHash(&met, key)
 		}
+
 		endpoint := fmt.Sprintf("http://%s/update/%s/%s/%s",
 			addr, t, typeOf.Elem().Field(i).Name, v)
 		request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(""))
