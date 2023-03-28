@@ -18,15 +18,16 @@ func NewMetricStorage() *MetricStorage {
 		Counter: make(map[string]int64),
 	}
 }
-func (m MetricStorage) AddGauge(metricName string, value float64) {
+
+func (m *MetricStorage) AddGauge(metricName string, value float64) {
 	m.Gauge[metricName] = value
 }
 
-func (m MetricStorage) AddCounter(metricName string, value int64) {
+func (m *MetricStorage) AddCounter(metricName string, value int64) {
 	m.Counter[metricName] += value
 }
 
-func (m MetricStorage) GetIntValue(metricName string) (value int64, err error) {
+func (m *MetricStorage) GetIntValue(metricName string) (value int64, err error) {
 	value, ok := m.Counter[metricName]
 	if !ok {
 		err = errors.New("no such metric")
@@ -34,7 +35,7 @@ func (m MetricStorage) GetIntValue(metricName string) (value int64, err error) {
 	return
 }
 
-func (m MetricStorage) GetFloatValue(metricName string) (value float64, err error) {
+func (m *MetricStorage) GetFloatValue(metricName string) (value float64, err error) {
 	value, ok := m.Gauge[metricName]
 	if !ok {
 		err = errors.New("no such metric")
@@ -42,7 +43,7 @@ func (m MetricStorage) GetFloatValue(metricName string) (value float64, err erro
 	return
 }
 
-func (m MetricStorage) GetValue(metricType string, metricName string) (str string, err error) {
+func (m *MetricStorage) GetValue(metricType string, metricName string) (str string, err error) {
 
 	switch metricType {
 	case "gauge":
@@ -66,7 +67,7 @@ func (m MetricStorage) GetValue(metricType string, metricName string) (str strin
 	return
 }
 
-func (m MetricStorage) Render(w http.ResponseWriter) error {
+func (m *MetricStorage) Render(w http.ResponseWriter) error {
 	content := pageTemplate()
 
 	tmpl, err := template.New("metrics_page").Parse(content)
@@ -93,16 +94,16 @@ func pageTemplate() string {
 				</tr>
 			</thead>
 			<tbody>
-				{{range $teacher, $rows := .Gauge }}
+				{{range $metric, $value := .Gauge }}
 				<tr>
-					<td>{{ $teacher }}</td>
-					<td>{{ $rows }}</td>
+					<td>{{ $metric }}</td>
+					<td>{{ $value }}</td>
 				</tr>
 				{{ end }}
-				{{range $teacher, $rows := .Counter }}
+				{{range $metric, $value := .Counter }}
 				<tr>
-					<td>{{ $teacher }}</td>
-					<td>{{ $rows }}</td>
+					<td>{{ $metric }}</td>
+					<td>{{ $value }}</td>
 				</tr>
 				{{ end }}
 			</tbody>

@@ -2,32 +2,59 @@ package main
 
 import (
 	"fmt"
-	"github.com/caarlos0/env/v6"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/storage"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/caarlos0/env/v6"
 
 	"github.com/go-chi/chi/v5"
 )
 
-type config struct {
-	Addr string `env:"ADDRESS"`
+type envConfig struct {
+	Addr          string `env:"ADDRESS"`
+	StoreInterval string `env:"STORE_INTERVAL"`
+	StoreFile     string `env:"STORE_FILE"`
+	Restore       string `env:"RESTORE"`
+}
+
+type serverConfig struct {
+	addr          string
+	storeInterval time.Duration
+	storeFile     string
+	restore       bool
 }
 
 func main() {
 
-	var cfg config
-	err := env.Parse(&cfg)
+	srvConfig, err := srvConfig()
+
 	if err != nil {
 		fmt.Println(err.Error())
+		return
 	}
-	addr := "127.0.0.1:8080"
-	if len(strings.TrimSpace(cfg.Addr)) != 0 {
-		addr = cfg.Addr
+	metStorage := storage.NewMetricStorage()
+	savingSettings := storage.NewSavingSettings(srvConfig.storeInterval, srvConfig.storeFile)
+	metStorage.Restore(srvConfig.restore, savingSettings, metStorage)
+	go func() {
+		for {
+			<-time.After(5 * time.Second)
+			metStorage.Save(savingSettings)
+		}
+	}()
+	r := routers(metStorage)
+	er := http.ListenAndServe(srvConfig.addr, r)
+	if er != nil {
+		fmt.Println(er.Error())
 	}
 
-	metStorage := storage.NewMetricStorage()
+}
+
+func routers(metStorage *storage.MetricStorage) *chi.Mux {
+
 	h := handlers.NewAPIHandler(metStorage)
 	r := chi.NewRouter()
 
@@ -40,8 +67,40 @@ func main() {
 		r.Get("/{metricType}/{metricName}", h.GetMetric)
 	})
 	r.Get("/", h.AllMetrics)
-	er := http.ListenAndServe(addr, r)
-	if er != nil {
-		fmt.Println(er.Error())
+	return r
+}
+
+func srvConfig() (serverConfig, error) {
+	srvConfig := serverConfig{
+		addr:          "127.0.0.1:8080",
+		storeInterval: 300,
+		storeFile:     "/tmp/devops-metrics-db.json",
+		restore:       true,
 	}
+
+	var cfg envConfig
+	err := env.Parse(&cfg)
+	if err != nil {
+		return srvConfig, err
+	}
+
+	if len(strings.TrimSpace(cfg.Addr)) != 0 {
+		srvConfig.addr = cfg.Addr
+	}
+
+	if len(strings.TrimSpace(cfg.StoreInterval)) != 0 {
+		srvConfig.storeInterval, err = time.ParseDuration(cfg.StoreInterval)
+		if err != nil {
+			return srvConfig, err
+		}
+	}
+
+	if len(strings.TrimSpace(cfg.Restore)) != 0 {
+		srvConfig.restore, err = strconv.ParseBool(cfg.Restore)
+		if err != nil {
+			return srvConfig, err
+		}
+	}
+
+	return srvConfig, nil
 }
