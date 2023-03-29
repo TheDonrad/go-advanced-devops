@@ -82,14 +82,14 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 		hash := met.Hash
 		calcGaugeHash(&met, h.key)
 		if hash != met.Hash {
-			http.Error(w, "Invalid metric type", http.StatusBadRequest)
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	case "counter":
 		h.metrics.AddCounter(met.ID, met.Delta)
 		hash := met.Hash
 		calcCounterHash(&met, h.key)
 		if hash != met.Hash {
-			http.Error(w, "Invalid metric type", http.StatusBadRequest)
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	default:
 		http.Error(w, "Invalid metric type", http.StatusNotImplemented)
@@ -135,8 +135,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
+		calcGaugeHash(&met, h.key)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
+		calcCounterHash(&met, h.key)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return

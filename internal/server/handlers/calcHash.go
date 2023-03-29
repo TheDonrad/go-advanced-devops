@@ -28,5 +28,5 @@ func calcHash(data string, key string) string {
 	h := hmac.New(sha256.New, []byte(key))
 	h.Write(src)
 	dst := h.Sum(nil)
-	return string(dst)
+	return fmt.Sprintf("%x", dst)
 }
