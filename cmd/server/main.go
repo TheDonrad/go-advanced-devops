@@ -25,7 +25,7 @@ func main() {
 			metStorage.Save(savingSettings)
 		}
 	}()
-	r := routers(metStorage, srvConfig.key)
+	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
 	er := http.ListenAndServe(srvConfig.addr, r)
 	if er != nil {
 		fmt.Println(er.Error())
@@ -33,9 +33,9 @@ func main() {
 
 }
 
-func routers(metStorage *storage.MetricStorage, key string) *chi.Mux {
+func routers(metStorage *storage.MetricStorage, key string, dbConnString string) *chi.Mux {
 
-	h := handlers.NewAPIHandler(metStorage, key)
+	h := handlers.NewAPIHandler(metStorage, key, dbConnString)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)
@@ -43,6 +43,7 @@ func routers(metStorage *storage.MetricStorage, key string) *chi.Mux {
 		r.Post("/", h.WriteWholeMetric)
 		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
 	})
+	r.Get("/ping", h.Ping)
 	r.Route("/value", func(r chi.Router) {
 		r.Post("/", h.GetWholeMetric)
 		r.Get("/{metricType}/{metricName}", h.GetMetric)

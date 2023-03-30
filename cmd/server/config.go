@@ -15,6 +15,7 @@ type serverConfig struct {
 	storeFile     string
 	restore       bool
 	key           string
+	dbConnString  string
 }
 
 func srvConfig() serverConfig {
@@ -23,6 +24,7 @@ func srvConfig() serverConfig {
 		storeInterval: 300 * time.Second,
 		storeFile:     "/tmp/devops-metrics-db.json",
 		restore:       true,
+		dbConnString:  "",
 	}
 	srvConfig.setConfigFlags()
 	srvConfig.setConfigEnv()
@@ -44,6 +46,8 @@ func (srvConfig *serverConfig) setConfigFlags() {
 
 	flag.StringVar(&srvConfig.key, "k", srvConfig.key, "hash key")
 
+	flag.StringVar(&srvConfig.dbConnString, "d", srvConfig.dbConnString, "db connection string")
+
 	flag.Parse()
 
 }
@@ -55,6 +59,7 @@ func (srvConfig *serverConfig) setConfigEnv() {
 		StoreFile     string `env:"STORE_FILE"`
 		Restore       string `env:"RESTORE"`
 		Key           string `env:"KEY"`
+		DBConnString  string `env:"DATABASE_DSN"`
 	}
 
 	err := env.Parse(&cfg)
@@ -85,5 +90,9 @@ func (srvConfig *serverConfig) setConfigEnv() {
 
 	if len(strings.TrimSpace(cfg.Key)) != 0 {
 		srvConfig.key = cfg.Key
+	}
+
+	if len(strings.TrimSpace(cfg.DBConnString)) != 0 {
+		srvConfig.dbConnString = cfg.DBConnString
 	}
 }

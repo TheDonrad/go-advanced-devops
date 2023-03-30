@@ -1,10 +1,14 @@
 package storage
 
 import (
+	"context"
 	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5"
 	"html/template"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type MetricStorage struct {
@@ -112,4 +116,27 @@ func pageTemplate() string {
 		</body>
 		</html>`
 	return content
+}
+
+func (m *MetricStorage) Ping(dbConnString string) (err error) {
+
+	if len(strings.TrimSpace(dbConnString)) == 0 {
+		return nil
+	}
+
+	conn, err := pgx.Connect(context.Background(), dbConnString)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if err = conn.Close(context.Background()); err != nil {
+			fmt.Println(err)
+		}
+	}()
+
+	if err = conn.Ping(context.Background()); err != nil {
+		return err
+	}
+	return nil
 }

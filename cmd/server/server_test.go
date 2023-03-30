@@ -64,7 +64,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 
 func NewRouter() chi.Router {
 	metStorage := storage.NewMetricStorage()
-	h := handlers.NewAPIHandler(metStorage, "")
+	h := handlers.NewAPIHandler(metStorage, "", "")
 	r := chi.NewRouter()
 
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", h.WriteMetric)
