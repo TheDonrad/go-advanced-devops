@@ -56,7 +56,7 @@ func (m *MetricStorage) GetValue(metricType string, metricName string) (str stri
 			err = errors.New("no such metric")
 			return
 		}
-		str = strconv.FormatFloat(value, 'f', 3, 64)
+		str = strconv.FormatFloat(value, 'f', -1, 64)
 	case "counter":
 		value, ok := m.Counter[metricName]
 		if !ok {
