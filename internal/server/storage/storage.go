@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type MetricStorage struct {
@@ -120,7 +119,7 @@ func pageTemplate() string {
 
 func (m *MetricStorage) Ping(dbConnString string) (err error) {
 
-	if len(strings.TrimSpace(dbConnString)) == 0 {
+	if len(dbConnString) == 0 {
 		return nil
 	}
 
