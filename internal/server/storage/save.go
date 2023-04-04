@@ -21,10 +21,10 @@ func NewSavingSettings(storeInterval time.Duration, storeFile string, database s
 
 func (m *MetricStorage) Save(savingSettings *SavingSettings) {
 
-	//if len(savingSettings.Database) > 0 {
-	//	m.saveToDB(savingSettings.Database)
-	//} else {
-	m.saveToFile(savingSettings)
-	//}
+	if len(savingSettings.Database) > 0 {
+		m.saveToDB(savingSettings.Database)
+	} else {
+		m.saveToFile(savingSettings)
+	}
 
 }

@@ -21,9 +21,10 @@ type storage interface {
 }
 
 type Metric struct {
-	ID    string  `json:"id"`              // имя метрики
-	MType string  `json:"type"`            // параметр, принимающий значение gauge или counter
-	Delta int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	ID    string `json:"id"`              // имя метрики
+	MType string `json:"type"`            // параметр, принимающий значение gauge или counter
+	Delta int64  `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	// TODO: проверить указатель и без omitempty
 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
 	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
@@ -135,6 +136,8 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// TODO: вынести в отдельный слой
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)

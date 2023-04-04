@@ -22,7 +22,7 @@ func SendMetrics(addr string, metrics interface{}, key string) (err error) {
 	client := &http.Client{}
 	values := reflect.ValueOf(metrics)
 	typeOf := reflect.TypeOf(metrics)
-
+	// TODO: Переделать на map
 	for i := 0; i < typeOf.Elem().NumField(); i++ {
 		var v string
 		value := values.Elem().Field(i)
