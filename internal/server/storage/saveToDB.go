@@ -22,10 +22,10 @@ func (m *MetricStorage) saveToDB(dbConnString string) {
 }
 
 func writeMetric(conn *pgx.Conn, m *MetricStorage) {
-	query := "INSERT INTO metrics(type, name, value)" +
-		"\nVALUES($1::varchar(100), $2::varchar(20), $3)" +
-		"\nON CONFLICT (type, name) DO UPDATE " +
-		"\nSET value = $3;"
+	query := `INSERT INTO metrics(type, name, value)
+		VALUES($1::text, $2::text, $3)
+		ON CONFLICT (type, name) DO UPDATE
+		SET value = $3;`
 	for k, v := range m.Gauge {
 		if _, err := conn.Exec(context.Background(), query, "gauge", k, v); err != nil {
 			fmt.Println(err.Error())

@@ -49,11 +49,13 @@ func (m *MetricStorage) restoreFromDB(dbConnString string) {
 
 func createTable(conn *pgx.Conn) {
 
-	query := "CREATE TABLE IF NOT EXISTS public.metrics" +
-		"(name character varying(100) COLLATE pg_catalog.\"default\" NOT NULL," +
-		"type character varying(20) COLLATE pg_catalog.\"default\" NOT NULL," +
-		"value double precision NOT NULL," +
-		"CONSTRAINT main UNIQUE (name, type))"
+	query := `CREATE TABLE IF NOT EXISTS public.metrics
+			(	
+			type text COLLATE pg_catalog.default NOT NULL,	
+			name text COLLATE pg_catalog.default NOT NULL,
+			value double precision NOT NULL,
+			CONSTRAINT main UNIQUE (name, type)
+			)`
 
 	if _, err := conn.Exec(context.Background(), query); err != nil {
 		fmt.Println(err.Error())
