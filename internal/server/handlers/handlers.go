@@ -11,8 +11,8 @@ import (
 )
 
 type storage interface {
-	AddGauge(metricName string, value float64)
-	AddCounter(metricName string, value int64)
+	AddGauge(metricName string, value float64, dbConnString string)
+	AddCounter(metricName string, value int64, dbConnString string)
 	GetValue(metricType string, metricName string) (string, error)
 	Render(w http.ResponseWriter) error
 	GetIntValue(metricName string) (value int64, err error)
@@ -57,14 +57,14 @@ func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.metrics.AddGauge(metricName, valueFloat)
+		h.metrics.AddGauge(metricName, valueFloat, h.dbConnString)
 	case "counter":
 		valueInt, err := strconv.ParseInt(metricValue, 0, 64)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.metrics.AddCounter(metricName, valueInt)
+		h.metrics.AddCounter(metricName, valueInt, h.dbConnString)
 	default:
 		http.Error(w, "Invalid metric type", http.StatusNotImplemented)
 	}
@@ -82,14 +82,14 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	switch met.MType {
 	case "gauge":
-		h.metrics.AddGauge(met.ID, met.Value)
+		h.metrics.AddGauge(met.ID, met.Value, h.dbConnString)
 		hash := met.Hash
 		calcGaugeHash(&met, h.key)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	case "counter":
-		h.metrics.AddCounter(met.ID, met.Delta)
+		h.metrics.AddCounter(met.ID, met.Delta, h.dbConnString)
 		hash := met.Hash
 		calcCounterHash(&met, h.key)
 		if hash != met.Hash {
