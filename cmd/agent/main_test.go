@@ -22,7 +22,7 @@ func TestCalculateMetrics(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.metrics.Gauge["Alloc"] = 10
-			tt.metrics.Counter["PollCount "] = 2
+			tt.metrics.Counter["PollCount"] = 2
 			tt.metrics.CalculateMetrics()
 			assert.Equal(t, tt.want, tt.metrics.Gauge["Alloc"])
 		})

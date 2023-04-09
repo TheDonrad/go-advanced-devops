@@ -17,9 +17,9 @@ func Calculate[T MyConstraint](key string, mType string, id string, value T) str
 	}
 	var data string
 	if mType == "gauge" {
-		data = fmt.Sprintf("%s:gauge:%f", id, value)
+		data = fmt.Sprintf("%s:gauge:%f", id, float64(value))
 	} else {
-		data = fmt.Sprintf("%s:counter:%d", id, value)
+		data = fmt.Sprintf("%s:counter:%d", id, int64(value))
 	}
 	return calcHash(data, key)
 }
