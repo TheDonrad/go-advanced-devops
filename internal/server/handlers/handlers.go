@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"goAdvancedTpl/internal/fabric/calchash"
 	"io"
 	"net/http"
 	"strconv"
@@ -84,14 +83,20 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		h.metrics.AddGauge(met.ID, met.Value, h.dbConnString)
+		hash := met.Hash
+		calcGaugeHash(&met, h.key)
+		if hash != met.Hash {
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
+		}
 	case "counter":
 		h.metrics.AddCounter(met.ID, met.Delta, h.dbConnString)
+		hash := met.Hash
+		calcCounterHash(&met, h.key)
+		if hash != met.Hash {
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
+		}
 	default:
 		http.Error(w, "Invalid metric type", http.StatusNotImplemented)
-	}
-	hash := calchash.Calculate(h.key, met.MType, met.ID, met.Value)
-	if hash != met.Hash {
-		http.Error(w, "Invalid hash", http.StatusBadRequest)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -136,10 +141,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+		calcGaugeHash(&met, h.key)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+		calcCounterHash(&met, h.key)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return
@@ -148,7 +153,6 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	b, _ := json.Marshal(met)
