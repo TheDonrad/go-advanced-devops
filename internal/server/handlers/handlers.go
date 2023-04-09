@@ -136,8 +136,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
+		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
+		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return
@@ -146,7 +148,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	b, _ := json.Marshal(met)
