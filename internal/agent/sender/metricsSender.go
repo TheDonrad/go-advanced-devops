@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"goAdvancedTpl/internal/agent/collector"
+	"goAdvancedTpl/internal/fabric/calchash"
 	"net/http"
-	"reflect"
-	"strconv"
 )
 
 type Metric struct {
@@ -17,73 +17,83 @@ type Metric struct {
 	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
 
-func SendMetrics(addr string, metrics interface{}, key string) (err error) {
+func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err error) {
 
 	client := &http.Client{}
-	values := reflect.ValueOf(metrics)
-	typeOf := reflect.TypeOf(metrics)
-	// TODO: Переделать на map
-	for i := 0; i < typeOf.Elem().NumField(); i++ {
-		var v string
-		value := values.Elem().Field(i)
-		switch typeOf.Elem().Field(i).Type.Kind() {
-		case reflect.Float64:
-			v = strconv.FormatFloat(value.Float(), 'g', 4, 64)
-		case reflect.Int64:
-			v = strconv.FormatInt(value.Int(), 10)
-		}
-		var t string
-		var met Metric
-		switch typeOf.Elem().Field(i).Type.String() {
-		case "collector.Gauge":
-			t = "gauge"
-			met = Metric{
-				ID:    typeOf.Elem().Field(i).Name,
-				MType: t,
-				Value: value.Float(),
-			}
-			calcGaugeHash(&met, key)
-		default:
-			t = "counter"
-			met = Metric{
-				ID:    typeOf.Elem().Field(i).Name,
-				MType: t,
-				Delta: value.Int(),
-			}
-			calcCounterHash(&met, key)
-		}
+	length := len(metrics.Gauge) + len(metrics.Counter)
+	metricsToSend := make([]Metric, length)
+	i := 0
+	for name, value := range metrics.Gauge {
 
-		endpoint := fmt.Sprintf("http://%s/update/%s/%s/%s",
-			addr, t, typeOf.Elem().Field(i).Name, v)
-		request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(""))
-		if err != nil {
+		met := Metric{
+			ID:    name,
+			MType: "gauge",
+			Value: value,
+		}
+		met.Hash = calchash.Calculate(key, met.MType, met.ID, met.Value)
+		metricsToSend[i] = met
+		i++
+
+	}
+	for name, value := range metrics.Counter {
+		met := Metric{
+			ID:    name,
+			MType: "counter",
+			Delta: value,
+		}
+		met.Hash = calchash.Calculate(key, met.MType, met.ID, met.Delta)
+		metricsToSend[i] = met
+		i++
+	}
+	for _, m := range metricsToSend {
+		if err = sendOneString(addr, m, client); err != nil {
 			return err
 		}
-		request.Header.Add("Content-Type", "text/plain")
-		response, err := client.Do(request)
-		if err != nil {
-			return err
-		}
-		err = response.Body.Close()
-		if err != nil {
-			return err
-		}
-		endpoint = fmt.Sprintf("http://%s/update/", addr)
-		b, _ := json.Marshal(met)
-		request, err = http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
-		if err != nil {
-			return err
-		}
-		request.Header.Add("Content-Type", "application/json")
-		response1, err := client.Do(request)
-		if err != nil {
-			return err
-		}
-		err = response1.Body.Close()
-		if err != nil {
+		if err = sendJSON(addr, m, client); err != nil {
 			return err
 		}
 	}
-
 	return err
+}
+
+func sendOneString(addr string, met Metric, client *http.Client) error {
+	var endpoint string
+	if met.MType == "gauge" {
+		endpoint = fmt.Sprintf("http://%s/update/%s/%s/%f",
+			addr, met.MType, met.ID, met.Value)
+	} else {
+		endpoint = fmt.Sprintf("http://%s/update/%s/%s/%d",
+			addr, met.MType, met.ID, met.Delta)
+	}
+	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(""))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Content-Type", "text/plain")
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	if err = response.Body.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func sendJSON(addr string, met Metric, client *http.Client) error {
+	endpoint := fmt.Sprintf("http://%s/update/", addr)
+	b, _ := json.Marshal(met)
+	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Content-Type", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	if err = response.Body.Close(); err != nil {
+		return err
+	}
+	return nil
 }
