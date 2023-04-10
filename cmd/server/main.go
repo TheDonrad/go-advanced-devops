@@ -49,5 +49,6 @@ func routers(metStorage *storage.MetricStorage, key string, dbConnString string)
 		r.Get("/{metricType}/{metricName}", h.GetMetric)
 	})
 	r.Get("/", h.AllMetrics)
+	r.Post("/updates/", h.WriteAllMetrics)
 	return r
 }

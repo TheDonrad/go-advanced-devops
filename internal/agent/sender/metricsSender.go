@@ -17,11 +17,13 @@ type Metric struct {
 	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
 
+type metricsMap []Metric
+
 func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err error) {
 
 	client := &http.Client{}
 	length := len(metrics.Gauge) + len(metrics.Counter)
-	metricsToSend := make([]Metric, length)
+	metricsToSend := make(metricsMap, length)
 	i := 0
 	for name, value := range metrics.Gauge {
 
@@ -53,6 +55,9 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err e
 			return err
 		}
 	}
+	if err = sendAllMetrics(addr, metricsToSend, client); err != nil {
+		return err
+	}
 	return err
 }
 
@@ -82,6 +87,24 @@ func sendOneString(addr string, met Metric, client *http.Client) error {
 
 func sendJSON(addr string, met Metric, client *http.Client) error {
 	endpoint := fmt.Sprintf("http://%s/update/", addr)
+	b, _ := json.Marshal(met)
+	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
+	if err != nil {
+		return err
+	}
+	request.Header.Add("Content-Type", "application/json")
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	if err = response.Body.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func sendAllMetrics(addr string, met metricsMap, client *http.Client) error {
+	endpoint := fmt.Sprintf("http://%s/updates/", addr)
 	b, _ := json.Marshal(met)
 	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
 	if err != nil {
