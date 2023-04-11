@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"log"
 )
@@ -10,7 +9,7 @@ import (
 func (m *MetricStorage) restoreFromDB(dbConnString string) {
 	conn, err := pgx.Connect(context.Background(), dbConnString)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	defer func() {
@@ -22,7 +21,7 @@ func (m *MetricStorage) restoreFromDB(dbConnString string) {
 	rows, err := conn.Query(context.Background(), "SELECT name, type, value FROM metrics")
 	if err != nil {
 		createTable(conn)
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 	defer rows.Close()
 
@@ -36,7 +35,7 @@ func (m *MetricStorage) restoreFromDB(dbConnString string) {
 		var r met
 		err = rows.Scan(&r.Name, &r.MetType, &r.Value)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 		switch r.MetType {
@@ -59,7 +58,7 @@ func createTable(conn *pgx.Conn) {
 			)`
 
 	if _, err := conn.Exec(context.Background(), query); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 }

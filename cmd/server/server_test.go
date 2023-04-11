@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/storage"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -55,7 +55,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		}
 	}()
 

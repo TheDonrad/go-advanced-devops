@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"goAdvancedTpl/internal/fabric/calchash"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -245,7 +245,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	b, _ := json.Marshal(sendMet[0]) // Для обхода ошибки автотестов
 	if err = h.metrics.Save(h.dbConnString, ""); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	w.Header().Add("Content-Type", "application/json")

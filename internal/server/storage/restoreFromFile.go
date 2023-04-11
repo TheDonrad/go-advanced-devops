@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 )
@@ -12,7 +11,7 @@ func (m *MetricStorage) restoreFromFile(fileName string) {
 	consumer, err := newConsumer(fileName)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	defer func() {
@@ -23,7 +22,7 @@ func (m *MetricStorage) restoreFromFile(fileName string) {
 	}()
 	err = consumer.readEvent(m)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 }

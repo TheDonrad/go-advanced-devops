@@ -3,7 +3,6 @@ package storage
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/jackc/pgx/v5"
 	"html/template"
 	"log"
@@ -27,7 +26,7 @@ func (m *MetricStorage) AddGauge(metricName string, value float64, dbConnString 
 	m.Gauge[metricName] = value
 	if len(dbConnString) > 0 {
 		if err := m.Save(dbConnString, ""); err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		}
 	}
 
@@ -37,7 +36,7 @@ func (m *MetricStorage) AddCounter(metricName string, value int64, dbConnString 
 	m.Counter[metricName] += value
 	if len(dbConnString) > 0 {
 		if err := m.Save(dbConnString, ""); err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 		}
 	}
 }
