@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"goAdvancedTpl/internal/fabric/calchash"
 	"io"
@@ -219,6 +220,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 			hash := met.Hash
 			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
 			if hash != met.Hash {
+				err = errors.New("invalid hash")
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
 			addedValues.gauge[met.ID] = met
@@ -227,6 +229,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 			hash := met.Hash
 			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
 			if hash != met.Hash {
+				err = errors.New("invalid hash")
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
 			addedValues.count[met.ID] = met
@@ -242,12 +245,14 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 	for _, metric := range addedValues.count {
 		sendMet = append(sendMet, metric)
 	}
-	b, _ := json.Marshal(sendMet)
+	b, _ := json.Marshal(sendMet[0])
 	if err = h.metrics.Save(h.dbConnString, ""); err != nil {
 		fmt.Println(err.Error())
 	}
-	w.Header().Set("Content-Type", "application/json")
+
+	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+
 	_, err = w.Write(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
