@@ -6,8 +6,8 @@ import (
 	"os"
 )
 
-func (m *MetricStorage) saveToFile(savingSettings *SavingSettings) {
-	fileName := savingSettings.StoreFile
+func (m *MetricStorage) saveToFile(fileName string) {
+
 	producer, err := newProducer(fileName)
 	if err != nil {
 		fmt.Println(err.Error())

@@ -25,8 +25,9 @@ func NewMetricStorage() *MetricStorage {
 func (m *MetricStorage) AddGauge(metricName string, value float64, dbConnString string) {
 	m.Gauge[metricName] = value
 	if len(dbConnString) > 0 {
-		set := NewSavingSettings(1, "", dbConnString)
-		m.Save(set)
+		if err := m.Save(dbConnString, ""); err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 
 }
@@ -34,8 +35,9 @@ func (m *MetricStorage) AddGauge(metricName string, value float64, dbConnString 
 func (m *MetricStorage) AddCounter(metricName string, value int64, dbConnString string) {
 	m.Counter[metricName] += value
 	if len(dbConnString) > 0 {
-		set := NewSavingSettings(1, "", dbConnString)
-		m.Save(set)
+		if err := m.Save(dbConnString, ""); err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 }
 

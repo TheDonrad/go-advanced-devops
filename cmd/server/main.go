@@ -22,7 +22,9 @@ func main() {
 	go func() {
 		for {
 			<-time.After(srvConfig.storeInterval)
-			metStorage.Save(savingSettings)
+			if err := metStorage.Save(savingSettings.Database, savingSettings.StoreFile); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 	}()
 	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
