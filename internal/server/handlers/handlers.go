@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"goAdvancedTpl/internal/fabric/calchash"
 	"io"
@@ -78,7 +79,7 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	met := Metric{}
 	var err error
-	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -135,7 +136,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	met := Metric{}
-	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -199,7 +200,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err = json.Unmarshal(body, &met); err != nil && err != io.EOF {
+	if err = json.Unmarshal(body, &met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

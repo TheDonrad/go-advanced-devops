@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"log"
 )
 
 func (m *MetricStorage) saveToDB(dbConnString string) {
@@ -15,7 +16,7 @@ func (m *MetricStorage) saveToDB(dbConnString string) {
 	}
 	defer func() {
 		if err = db.Close(); err != nil {
-			fmt.Println(err.Error())
+			log.Print(err.Error())
 		}
 	}()
 

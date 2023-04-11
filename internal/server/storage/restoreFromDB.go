@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"log"
 )
 
 func (m *MetricStorage) restoreFromDB(dbConnString string) {
@@ -14,7 +15,7 @@ func (m *MetricStorage) restoreFromDB(dbConnString string) {
 
 	defer func() {
 		if err = conn.Close(context.Background()); err != nil {
-			fmt.Println(err.Error())
+			log.Print(err.Error())
 		}
 	}()
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -141,7 +142,7 @@ func (m *MetricStorage) Ping(dbConnString string) (err error) {
 
 	defer func() {
 		if err = conn.Close(context.Background()); err != nil {
-			fmt.Println(err)
+			log.Print(err)
 		}
 	}()
 

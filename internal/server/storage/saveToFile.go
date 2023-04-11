@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -17,7 +18,7 @@ func (m *MetricStorage) saveToFile(fileName string) {
 	defer func() {
 		err = producer.close()
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Print(err.Error())
 		}
 	}()
 	if err := producer.writeEvent(m); err != nil {
