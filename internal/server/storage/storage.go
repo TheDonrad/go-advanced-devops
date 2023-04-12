@@ -8,7 +8,6 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 type MetricStorage struct {
@@ -23,12 +22,21 @@ func NewMetricStorage() *MetricStorage {
 	}
 }
 
-func (m *MetricStorage) AddGauge(metricName string, value float64) {
+func (m *MetricStorage) AddGauge(metricName string, value float64, dbConnString string) {
 	m.Gauge[metricName] = value
+	if len(dbConnString) > 0 {
+		set := NewSavingSettings(1, "", dbConnString)
+		m.Save(set)
+	}
+
 }
 
-func (m *MetricStorage) AddCounter(metricName string, value int64) {
+func (m *MetricStorage) AddCounter(metricName string, value int64, dbConnString string) {
 	m.Counter[metricName] += value
+	if len(dbConnString) > 0 {
+		set := NewSavingSettings(1, "", dbConnString)
+		m.Save(set)
+	}
 }
 
 func (m *MetricStorage) GetIntValue(metricName string) (value int64, err error) {
@@ -56,7 +64,7 @@ func (m *MetricStorage) GetValue(metricType string, metricName string) (str stri
 			err = errors.New("no such metric")
 			return
 		}
-		str = strconv.FormatFloat(value, 'f', 3, 64)
+		str = strconv.FormatFloat(value, 'f', -1, 64)
 	case "counter":
 		value, ok := m.Counter[metricName]
 		if !ok {
@@ -120,7 +128,7 @@ func pageTemplate() string {
 
 func (m *MetricStorage) Ping(dbConnString string) (err error) {
 
-	if len(strings.TrimSpace(dbConnString)) == 0 {
+	if len(dbConnString) == 0 {
 		return nil
 	}
 

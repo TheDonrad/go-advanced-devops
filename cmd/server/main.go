@@ -17,8 +17,8 @@ func main() {
 	srvConfig := srvConfig()
 
 	metStorage := storage.NewMetricStorage()
-	savingSettings := storage.NewSavingSettings(srvConfig.storeInterval, srvConfig.storeFile)
-	metStorage.Restore(srvConfig.restore, savingSettings, metStorage)
+	savingSettings := storage.NewSavingSettings(srvConfig.storeInterval, srvConfig.storeFile, srvConfig.dbConnString)
+	metStorage.Restore(srvConfig.restore, savingSettings)
 	go func() {
 		for {
 			<-time.After(srvConfig.storeInterval)
