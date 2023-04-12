@@ -17,6 +17,7 @@ type storage interface {
 	Render(w http.ResponseWriter) error
 	GetIntValue(metricName string) (value int64, err error)
 	GetFloatValue(metricName string) (value float64, err error)
+	Ping(dbConnString string) (err error)
 }
 
 type Metric struct {
@@ -28,14 +29,16 @@ type Metric struct {
 }
 
 type APIHandler struct {
-	metrics storage
-	key     string
+	metrics      storage
+	key          string
+	dbConnString string
 }
 
-func NewAPIHandler(metrics storage, key string) (h *APIHandler) {
+func NewAPIHandler(metrics storage, key string, dbConnString string) (h *APIHandler) {
 	h = &APIHandler{
-		metrics: metrics,
-		key:     key,
+		metrics:      metrics,
+		key:          key,
+		dbConnString: dbConnString,
 	}
 	return
 }
@@ -160,6 +163,21 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	err := h.metrics.Render(w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *APIHandler) Ping(w http.ResponseWriter, _ *http.Request) {
+
+	err := h.metrics.Ping(h.dbConnString)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	_, err = w.Write([]byte(""))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
