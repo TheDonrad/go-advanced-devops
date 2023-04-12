@@ -22,7 +22,9 @@ func main() {
 	go func() {
 		for {
 			<-time.After(srvConfig.storeInterval)
-			metStorage.Save(savingSettings)
+			if err := metStorage.Save(savingSettings.Database, savingSettings.StoreFile); err != nil {
+				fmt.Println(err.Error())
+			}
 		}
 	}()
 	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
@@ -49,5 +51,6 @@ func routers(metStorage *storage.MetricStorage, key string, dbConnString string)
 		r.Get("/{metricType}/{metricName}", h.GetMetric)
 	})
 	r.Get("/", h.AllMetrics)
+	r.Post("/updates/", h.WriteAllMetrics)
 	return r
 }

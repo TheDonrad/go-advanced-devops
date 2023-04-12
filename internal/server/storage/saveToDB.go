@@ -2,38 +2,71 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func (m *MetricStorage) saveToDB(dbConnString string) {
-	conn, err := pgx.Connect(context.Background(), dbConnString)
+	db, err := sql.Open("pgx",
+		dbConnString)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
 	defer func() {
-		if err = conn.Close(context.Background()); err != nil {
+		if err = db.Close(); err != nil {
 			fmt.Println(err.Error())
 		}
 	}()
 
-	writeMetric(conn, m)
+	writeMetric(db, m)
 }
 
-func writeMetric(conn *pgx.Conn, m *MetricStorage) {
+func writeMetric(db *sql.DB, m *MetricStorage) {
 	query := `INSERT INTO metrics(type, name, value)
-		VALUES($1::text, $2::text, $3)
+		VALUES($1, $2, $3)
 		ON CONFLICT (type, name) DO UPDATE
 		SET value = $3;`
+	var err error
+	tx, err := db.Begin()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			fmt.Println(err.Error())
+			if err = tx.Rollback(); err != nil {
+				fmt.Println(err.Error())
+			}
+		} else {
+			if err = tx.Commit(); err != nil {
+				fmt.Println(err.Error())
+			}
+		}
+	}()
+	ctx := context.Background()
+	stmt, err := tx.PrepareContext(ctx, query)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer func() {
+		if err = stmt.Close(); err != nil {
+			fmt.Println(err.Error())
+		}
+	}()
+
 	for k, v := range m.Gauge {
-		if _, err := conn.Exec(context.Background(), query, "gauge", k, v); err != nil {
+		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
 			fmt.Println(err.Error())
 		}
 	}
 	for k, v := range m.Counter {
-		if _, err := conn.Exec(context.Background(), query, "counter", k, v); err != nil {
+		if _, err := stmt.ExecContext(ctx, "counter", k, v); err != nil {
 			fmt.Println(err.Error())
 		}
 	}
+
 }

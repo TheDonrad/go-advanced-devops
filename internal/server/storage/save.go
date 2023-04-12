@@ -19,12 +19,12 @@ func NewSavingSettings(storeInterval time.Duration, storeFile string, database s
 	}
 }
 
-func (m *MetricStorage) Save(savingSettings *SavingSettings) {
+func (m *MetricStorage) Save(database string, file string) error {
 
-	if len(savingSettings.Database) > 0 {
-		m.saveToDB(savingSettings.Database)
+	if len(database) > 0 {
+		m.saveToDB(database)
 	} else {
-		m.saveToFile(savingSettings)
+		m.saveToFile(file)
 	}
-
+	return nil
 }
