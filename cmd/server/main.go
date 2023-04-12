@@ -21,11 +21,11 @@ func main() {
 	metStorage.Restore(srvConfig.restore, savingSettings, metStorage)
 	go func() {
 		for {
-			<-time.After(5 * time.Second)
+			<-time.After(srvConfig.storeInterval)
 			metStorage.Save(savingSettings)
 		}
 	}()
-	r := routers(metStorage)
+	r := routers(metStorage, srvConfig.key)
 	er := http.ListenAndServe(srvConfig.addr, r)
 	if er != nil {
 		fmt.Println(er.Error())
@@ -33,9 +33,9 @@ func main() {
 
 }
 
-func routers(metStorage *storage.MetricStorage) *chi.Mux {
+func routers(metStorage *storage.MetricStorage, key string) *chi.Mux {
 
-	h := handlers.NewAPIHandler(metStorage)
+	h := handlers.NewAPIHandler(metStorage, key)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)

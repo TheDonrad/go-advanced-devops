@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type metricsHandlers interface {
+type storage interface {
 	AddGauge(metricName string, value float64)
 	AddCounter(metricName string, value int64)
 	GetValue(metricType string, metricName string) (string, error)
@@ -24,14 +24,19 @@ type Metric struct {
 	MType string  `json:"type"`            // параметр, принимающий значение gauge или counter
 	Delta int64   `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
 
 type APIHandler struct {
-	metrics metricsHandlers
+	metrics storage
+	key     string
 }
 
-func NewAPIHandler(metric metricsHandlers) (h *APIHandler) {
-	h = &APIHandler{metrics: metric}
+func NewAPIHandler(metrics storage, key string) (h *APIHandler) {
+	h = &APIHandler{
+		metrics: metrics,
+		key:     key,
+	}
 	return
 }
 
@@ -65,22 +70,34 @@ func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	met := Metric{}
-	if err := json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
+	var err error
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	switch met.MType {
 	case "gauge":
 		h.metrics.AddGauge(met.ID, met.Value)
+		hash := met.Hash
+		calcGaugeHash(&met, h.key)
+		if hash != met.Hash {
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
+		}
 	case "counter":
 		h.metrics.AddCounter(met.ID, met.Delta)
+		hash := met.Hash
+		calcCounterHash(&met, h.key)
+		if hash != met.Hash {
+			http.Error(w, "Invalid hash", http.StatusBadRequest)
+		}
 	default:
 		http.Error(w, "Invalid metric type", http.StatusNotImplemented)
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	b, _ := json.Marshal(met)
-	_, err := w.Write(b)
+	_, err = w.Write(b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -118,8 +135,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
+		calcGaugeHash(&met, h.key)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
+		calcCounterHash(&met, h.key)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return

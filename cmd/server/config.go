@@ -14,12 +14,13 @@ type serverConfig struct {
 	storeInterval time.Duration
 	storeFile     string
 	restore       bool
+	key           string
 }
 
 func srvConfig() serverConfig {
 	srvConfig := serverConfig{
 		addr:          "127.0.0.1:8080",
-		storeInterval: 300,
+		storeInterval: 300 * time.Second,
 		storeFile:     "/tmp/devops-metrics-db.json",
 		restore:       true,
 	}
@@ -41,6 +42,8 @@ func (srvConfig *serverConfig) setConfigFlags() {
 	})
 	flag.BoolVar(&srvConfig.restore, "r", srvConfig.restore, "restore")
 
+	flag.StringVar(&srvConfig.key, "k", srvConfig.key, "hash key")
+
 	flag.Parse()
 
 }
@@ -51,6 +54,7 @@ func (srvConfig *serverConfig) setConfigEnv() {
 		StoreInterval string `env:"STORE_INTERVAL"`
 		StoreFile     string `env:"STORE_FILE"`
 		Restore       string `env:"RESTORE"`
+		Key           string `env:"KEY"`
 	}
 
 	err := env.Parse(&cfg)
@@ -77,5 +81,9 @@ func (srvConfig *serverConfig) setConfigEnv() {
 			fmt.Println(err.Error())
 			return
 		}
+	}
+
+	if len(strings.TrimSpace(cfg.Key)) != 0 {
+		srvConfig.key = cfg.Key
 	}
 }
