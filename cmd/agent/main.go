@@ -2,6 +2,7 @@ package main
 
 import (
 	"goAdvancedTpl/internal/agent/collector"
+	"goAdvancedTpl/internal/agent/config"
 	"goAdvancedTpl/internal/agent/sender"
 	"log"
 	"runtime"
@@ -10,7 +11,7 @@ import (
 
 func main() {
 
-	settings := setConfig()
+	settings := config.SetConfig()
 
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
@@ -18,9 +19,9 @@ func main() {
 	for {
 		metrics.SetMetrics(memStats)
 
-		if time.Since(startTime) >= settings.reportInterval {
+		if time.Since(startTime) >= settings.ReportInterval {
 			metrics.CalculateMetrics()
-			err := sender.SendMetrics(settings.addr, metrics, settings.key)
+			err := sender.SendMetrics(settings.Addr, metrics, settings.Key)
 			if err != nil {
 				log.Println(err.Error())
 			}
@@ -28,7 +29,7 @@ func main() {
 			startTime = time.Now()
 
 		}
-		<-time.After(settings.pollInterval)
+		<-time.After(settings.PollInterval)
 	}
 
 }

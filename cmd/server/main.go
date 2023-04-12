@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/go-chi/chi/v5/middleware"
+	"goAdvancedTpl/internal/server/config"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/servermiddleware"
 	"goAdvancedTpl/internal/server/storage"
@@ -14,21 +15,21 @@ import (
 
 func main() {
 
-	srvConfig := srvConfig()
+	srvConfig := config.SrvConfig()
 
 	metStorage := storage.NewMetricStorage()
-	savingSettings := storage.NewSavingSettings(srvConfig.storeInterval, srvConfig.storeFile, srvConfig.dbConnString)
-	metStorage.Restore(srvConfig.restore, savingSettings)
+	savingSettings := storage.NewSavingSettings(srvConfig.StoreInterval, srvConfig.StoreFile, srvConfig.DBConnString)
+	metStorage.Restore(srvConfig.Restore, savingSettings)
 	go func() {
 		for {
-			<-time.After(srvConfig.storeInterval)
+			<-time.After(srvConfig.StoreInterval)
 			if err := metStorage.Save(savingSettings.Database, savingSettings.StoreFile); err != nil {
 				log.Println(err.Error())
 			}
 		}
 	}()
-	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
-	err := http.ListenAndServe(srvConfig.addr, r)
+	r := routers(metStorage, srvConfig.Key, srvConfig.DBConnString)
+	err := http.ListenAndServe(srvConfig.Addr, r)
 	if err != nil {
 		log.Println(err.Error())
 	}

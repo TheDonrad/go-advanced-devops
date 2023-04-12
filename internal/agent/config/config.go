@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"flag"
@@ -8,42 +8,42 @@ import (
 	"time"
 )
 
-type settingsList struct {
-	addr           string
-	reportInterval time.Duration
-	pollInterval   time.Duration
-	key            string
+type SettingsList struct {
+	Addr           string
+	ReportInterval time.Duration
+	PollInterval   time.Duration
+	Key            string
 }
 
-func setConfig() settingsList {
+func SetConfig() *SettingsList {
 
-	settings := settingsList{
-		addr:           "127.0.0.1:8080",
-		pollInterval:   2 * time.Second,
-		reportInterval: 5 * time.Second,
-		key:            "",
+	settings := SettingsList{
+		Addr:           "127.0.0.1:8080",
+		PollInterval:   2 * time.Second,
+		ReportInterval: 5 * time.Second,
+		Key:            "",
 	}
 	settings.setConfigFlags()
 	settings.setConfigEnv()
-	return settings
+	return &settings
 }
 
-func (settings *settingsList) setConfigFlags() {
+func (settings *SettingsList) setConfigFlags() {
 
-	flag.StringVar(&settings.addr, "a", settings.addr, "host to send")
+	flag.StringVar(&settings.Addr, "a", settings.Addr, "host to send")
 	flag.Func("p", "poll interval", func(flagValue string) error {
-		settings.pollInterval, _ = time.ParseDuration(flagValue)
+		settings.PollInterval, _ = time.ParseDuration(flagValue)
 		return nil
 	})
 	flag.Func("r", "report interval", func(flagValue string) error {
-		settings.reportInterval, _ = time.ParseDuration(flagValue)
+		settings.ReportInterval, _ = time.ParseDuration(flagValue)
 		return nil
 	})
-	flag.StringVar(&settings.key, "k", settings.key, "hash key")
+	flag.StringVar(&settings.Key, "k", settings.Key, "hash key")
 	flag.Parse()
 }
 
-func (settings *settingsList) setConfigEnv() {
+func (settings *SettingsList) setConfigEnv() {
 
 	var cfg struct {
 		Addr           string `env:"ADDRESS"`
@@ -59,11 +59,11 @@ func (settings *settingsList) setConfigEnv() {
 	}
 
 	if len(strings.TrimSpace(cfg.Addr)) != 0 {
-		settings.addr = cfg.Addr
+		settings.Addr = cfg.Addr
 	}
 
 	if len(strings.TrimSpace(cfg.PollInterval)) != 0 {
-		settings.pollInterval, err = time.ParseDuration(cfg.PollInterval)
+		settings.PollInterval, err = time.ParseDuration(cfg.PollInterval)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -71,7 +71,7 @@ func (settings *settingsList) setConfigEnv() {
 	}
 
 	if len(strings.TrimSpace(cfg.ReportInterval)) != 0 {
-		settings.reportInterval, err = time.ParseDuration(cfg.ReportInterval)
+		settings.ReportInterval, err = time.ParseDuration(cfg.ReportInterval)
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -79,7 +79,7 @@ func (settings *settingsList) setConfigEnv() {
 	}
 
 	if len(strings.TrimSpace(cfg.Key)) != 0 {
-		settings.key = cfg.Key
+		settings.Key = cfg.Key
 	}
 
 }
