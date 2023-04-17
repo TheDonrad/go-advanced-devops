@@ -1,4 +1,4 @@
-package storage
+package dbstorage
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"log"
 )
 
-func (m *MetricStorage) restoreFromDB(dbConnString string) {
-	conn, err := pgx.Connect(context.Background(), dbConnString)
+func (m *DBStorage) Restore() {
+	conn, err := pgx.Connect(context.Background(), m.Settings.DBConnString)
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -40,9 +40,9 @@ func (m *MetricStorage) restoreFromDB(dbConnString string) {
 		}
 		switch r.MetType {
 		case "gauge":
-			m.Gauge[r.Name] = r.Value
+			m.Metrics.Gauge[r.Name] = r.Value
 		default:
-			m.Counter[r.Name] = int64(r.Value)
+			m.Metrics.Counter[r.Name] = int64(r.Value)
 		}
 	}
 }

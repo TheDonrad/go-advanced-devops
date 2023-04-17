@@ -1,4 +1,4 @@
-package storage
+package dbstorage
 
 import (
 	"context"
@@ -7,11 +7,11 @@ import (
 	"log"
 )
 
-func (m *MetricStorage) saveToDB(dbConnString string) {
+func (m *DBStorage) Save() error {
 	db, err := sql.Open("pgx",
-		dbConnString)
+		m.Settings.DBConnString)
 	if err != nil {
-		log.Println(err.Error())
+		return err
 	}
 	defer func() {
 		if err = db.Close(); err != nil {
@@ -20,9 +20,10 @@ func (m *MetricStorage) saveToDB(dbConnString string) {
 	}()
 
 	writeMetric(db, m)
+	return nil
 }
 
-func writeMetric(db *sql.DB, m *MetricStorage) {
+func writeMetric(db *sql.DB, m *DBStorage) {
 	query := `INSERT INTO metrics(type, name, value)
 		VALUES($1, $2, $3)
 		ON CONFLICT (type, name) DO UPDATE
@@ -58,15 +59,14 @@ func writeMetric(db *sql.DB, m *MetricStorage) {
 		}
 	}()
 
-	for k, v := range m.Gauge {
+	for k, v := range m.Metrics.Gauge {
 		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
 			log.Println(err.Error())
 		}
 	}
-	for k, v := range m.Counter {
+	for k, v := range m.Metrics.Counter {
 		if _, err := stmt.ExecContext(ctx, "counter", k, v); err != nil {
 			log.Println(err.Error())
 		}
 	}
-
 }

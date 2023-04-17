@@ -1,13 +1,14 @@
 package main
 
 import (
+	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/handlers"
-	"goAdvancedTpl/internal/server/storage"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -63,8 +64,8 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 }
 
 func NewRouter() chi.Router {
-	metStorage := storage.NewMetricStorage()
-	h := handlers.NewAPIHandler(metStorage, "", "")
+	metStorage := filestorage.NewFileStorage(5*time.Second, "")
+	h := handlers.NewAPIHandler(metStorage, "")
 	r := chi.NewRouter()
 
 	r.Post("/update/{metricType}/{metricName}/{metricValue}", h.WriteMetric)

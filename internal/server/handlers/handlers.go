@@ -13,15 +13,15 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type storage interface {
-	AddGauge(metricName string, value float64, dbConnString string)
-	AddCounter(metricName string, value int64, dbConnString string)
-	GetValue(metricType string, metricName string) (string, error)
+type Storage interface {
+	AddValue(metricType string, metricName string, f float64, i int64)
 	Render(w http.ResponseWriter) error
+	GetValue(metricType string, metricName string) (string, error)
 	GetIntValue(metricName string) (value int64, err error)
 	GetFloatValue(metricName string) (value float64, err error)
-	Ping(dbConnString string) (err error)
-	Save(database string, file string) (err error)
+	Ping() (err error)
+	Save() (err error)
+	Restore()
 }
 
 type Metric struct {
@@ -34,16 +34,14 @@ type Metric struct {
 }
 
 type APIHandler struct {
-	metrics      storage
-	key          string
-	dbConnString string
+	metrics Storage
+	key     string
 }
 
-func NewAPIHandler(metrics storage, key string, dbConnString string) (h *APIHandler) {
+func NewAPIHandler(metrics Storage, key string) (h *APIHandler) {
 	h = &APIHandler{
-		metrics:      metrics,
-		key:          key,
-		dbConnString: dbConnString,
+		metrics: metrics,
+		key:     key,
 	}
 	return
 }
@@ -61,14 +59,14 @@ func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.metrics.AddGauge(metricName, valueFloat, h.dbConnString)
+		h.metrics.AddValue(metricType, metricName, valueFloat, 0)
 	case "counter":
 		valueInt, err := strconv.ParseInt(metricValue, 0, 64)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		h.metrics.AddCounter(metricName, valueInt, h.dbConnString)
+		h.metrics.AddValue(metricType, metricName, 0, valueInt)
 	default:
 		http.Error(w, "Invalid metric type", http.StatusNotImplemented)
 	}
@@ -86,14 +84,14 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	switch met.MType {
 	case "gauge":
-		h.metrics.AddGauge(met.ID, met.Value, h.dbConnString)
+		h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 		hash := met.Hash
 		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	case "counter":
-		h.metrics.AddCounter(met.ID, met.Delta, h.dbConnString)
+		h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 		hash := met.Hash
 		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
 		if hash != met.Hash {
@@ -178,7 +176,7 @@ func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
 
 func (h *APIHandler) Ping(w http.ResponseWriter, _ *http.Request) {
 
-	err := h.metrics.Ping(h.dbConnString)
+	err := h.metrics.Ping()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -204,47 +202,30 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	type received struct {
-		gauge map[string]Metric
-		count map[string]Metric
-	}
 
-	addedValues := received{
-		make(map[string]Metric),
-		make(map[string]Metric),
-	}
 	for _, met := range met {
 		switch met.MType {
 		case "gauge":
-			h.metrics.AddGauge(met.ID, met.Value, "")
+			h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 			hash := met.Hash
-			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
-			addedValues.gauge[met.ID] = met
 		case "counter":
-			h.metrics.AddCounter(met.ID, met.Delta, "")
+			h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 			hash := met.Hash
 			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
-			addedValues.count[met.ID] = met
+
 		default:
 			http.Error(w, "Invalid metric type", http.StatusNotImplemented)
 		}
 	}
 
-	var sendMet []Metric
-	for _, metric := range addedValues.gauge {
-		sendMet = append(sendMet, metric)
-	}
-	for _, metric := range addedValues.count {
-		sendMet = append(sendMet, metric)
-	}
-	b, _ := json.Marshal(sendMet[0]) // Для обхода ошибки автотестов
-	if err = h.metrics.Save(h.dbConnString, ""); err != nil {
+	b, _ := json.Marshal(met[0]) // Для обхода ошибки автотестов
+	if err = h.metrics.Save(); err != nil {
 		log.Println(err.Error())
 	}
 

@@ -1,14 +1,15 @@
-package storage
+package filestorage
 
 import (
 	"encoding/json"
+	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"log"
 	"os"
 )
 
-func (m *MetricStorage) restoreFromFile(fileName string) {
+func (m *FileStorage) Restore() {
 
-	consumer, err := newConsumer(fileName)
+	consumer, err := newConsumer(m.Settings.StoreFile)
 
 	if err != nil {
 		log.Println(err.Error())
@@ -20,7 +21,7 @@ func (m *MetricStorage) restoreFromFile(fileName string) {
 			log.Print(err.Error())
 		}
 	}()
-	err = consumer.readEvent(m)
+	err = consumer.readEvent(m.Metrics)
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -47,7 +48,7 @@ func (c *consumer) Close() error {
 	return c.file.Close()
 }
 
-func (c *consumer) readEvent(metStorage *MetricStorage) error {
+func (c *consumer) readEvent(metStorage *metricsstorage.MetricStorage) error {
 	if err := c.decoder.Decode(metStorage); err != nil {
 		return err
 	}
