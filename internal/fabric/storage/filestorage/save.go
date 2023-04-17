@@ -20,7 +20,7 @@ func (m *FileStorage) Save() error {
 			log.Print(err.Error())
 		}
 	}()
-	if err := producer.writeEvent(m.Metrics); err != nil {
+	if err := producer.writeEvent(&m.Metrics); err != nil {
 		return err
 	}
 	return nil

@@ -224,7 +224,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	b, _ := json.Marshal(met[0]) // Для обхода ошибки автотестов
+	b, _ := json.Marshal(met) // Для обхода ошибки автотестов
 	if err = h.metrics.Save(); err != nil {
 		log.Println(err.Error())
 	}

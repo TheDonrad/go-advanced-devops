@@ -21,7 +21,7 @@ func (m *FileStorage) Restore() {
 			log.Print(err.Error())
 		}
 	}()
-	err = consumer.readEvent(m.Metrics)
+	err = consumer.readEvent(&m.Metrics)
 	if err != nil {
 		log.Println(err.Error())
 		return

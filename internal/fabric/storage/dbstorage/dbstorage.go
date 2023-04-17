@@ -11,7 +11,7 @@ import (
 )
 
 type DBStorage struct {
-	Metrics  *metricsstorage.MetricStorage
+	Metrics  metricsstorage.MetricStorage
 	Settings struct {
 		DBConnString string
 	}
@@ -19,7 +19,7 @@ type DBStorage struct {
 
 func NewDBStorage(connString string) *DBStorage {
 	return &DBStorage{
-		Metrics:  metricsstorage.NewMetricStorageLink(),
+		Metrics:  metricsstorage.NewMetricStorage(),
 		Settings: struct{ DBConnString string }{DBConnString: connString},
 	}
 }

@@ -17,14 +17,7 @@ func NewMetricStorage() MetricStorage {
 	}
 }
 
-func NewMetricStorageLink() *MetricStorage {
-	return &MetricStorage{
-		Gauge:   make(map[string]float64),
-		Counter: make(map[string]int64),
-	}
-}
-
-func (m *MetricStorage) Render(w http.ResponseWriter) error {
+func (m MetricStorage) Render(w http.ResponseWriter) error {
 	content := pageTemplate()
 
 	tmpl, err := template.New("metrics_page").Parse(content)

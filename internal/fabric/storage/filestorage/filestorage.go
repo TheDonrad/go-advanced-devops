@@ -10,7 +10,7 @@ import (
 )
 
 type FileStorage struct {
-	Metrics  *metricsstorage.MetricStorage
+	Metrics  metricsstorage.MetricStorage
 	Settings struct {
 		StoreFile     string
 		StoreInterval time.Duration
@@ -19,7 +19,7 @@ type FileStorage struct {
 
 func NewFileStorage(storeInterval time.Duration, storeFile string) *FileStorage {
 	fs := &FileStorage{
-		Metrics: metricsstorage.NewMetricStorageLink(),
+		Metrics: metricsstorage.NewMetricStorage(),
 		Settings: struct {
 			StoreFile     string
 			StoreInterval time.Duration
