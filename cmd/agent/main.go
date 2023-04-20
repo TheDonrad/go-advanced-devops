@@ -17,22 +17,23 @@ func main() {
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
 	wg := &sync.WaitGroup{}
+
 	wg.Add(1)
 	go func() {
-
 		for {
 			metrics.SetMetrics(memStats)
 			time.Sleep(settings.ReportInterval)
 		}
 	}()
+
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		for {
 			metrics.SetAdditionalMetrics()
 			time.Sleep(settings.ReportInterval)
 		}
 	}()
-	wg.Add(1)
+
 	go func() {
 
 		for {
