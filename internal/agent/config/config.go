@@ -13,6 +13,7 @@ type SettingsList struct {
 	ReportInterval time.Duration
 	PollInterval   time.Duration
 	Key            string
+	RateLimit      int
 }
 
 func SetConfig() *SettingsList {
@@ -22,6 +23,7 @@ func SetConfig() *SettingsList {
 		PollInterval:   2 * time.Second,
 		ReportInterval: 5 * time.Second,
 		Key:            "",
+		RateLimit:      5,
 	}
 	settings.setConfigFlags()
 	settings.setConfigEnv()
@@ -40,6 +42,8 @@ func (settings *SettingsList) setConfigFlags() {
 		return nil
 	})
 	flag.StringVar(&settings.Key, "k", settings.Key, "hash key")
+	flag.IntVar(&settings.RateLimit, "l", settings.RateLimit, "rate limit")
+
 	flag.Parse()
 }
 
@@ -50,6 +54,7 @@ func (settings *SettingsList) setConfigEnv() {
 		ReportInterval string `env:"REPORT_INTERVAL"`
 		PollInterval   string `env:"POLL_INTERVAL"`
 		Key            string `env:"KEY"`
+		RateLimit      int    `env:"RATE_LIMIT"`
 	}
 
 	err := env.Parse(&cfg)
@@ -82,4 +87,7 @@ func (settings *SettingsList) setConfigEnv() {
 		settings.Key = cfg.Key
 	}
 
+	if cfg.RateLimit > 0 {
+		settings.RateLimit = cfg.RateLimit
+	}
 }
