@@ -67,7 +67,7 @@ func (metrics *MetricsList) SetAdditionalMetrics() {
 		logs.New().Println(err.Error())
 		return
 	}
-	metrics.Gauge["CPUutilization1"] = c[0] + 1
+	metrics.Gauge["CPUutilization1"] = c[0] + rand.Float64()
 }
 
 func (metrics *MetricsList) CalculateMetrics() {
