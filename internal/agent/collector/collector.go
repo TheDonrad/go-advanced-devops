@@ -1,9 +1,10 @@
 package collector
 
 import (
-	"context"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/mem"
+
+	"context"
 	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"math/rand"

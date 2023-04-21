@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"sync"
 )
 
 type DBStorage struct {
@@ -15,6 +16,7 @@ type DBStorage struct {
 	Settings struct {
 		DBConnString string
 	}
+	Mutex sync.RWMutex
 }
 
 func NewDBStorage(connString string) *DBStorage {
@@ -25,13 +27,14 @@ func NewDBStorage(connString string) *DBStorage {
 }
 
 func (m *DBStorage) AddValue(metricType string, metricName string, f float64, i int64) {
+	m.Mutex.Lock()
 	switch metricType {
 	case "gauge":
 		m.Metrics.Gauge[metricName] = f
 	default:
 		m.Metrics.Counter[metricName] += i
 	}
-
+	m.Mutex.Unlock()
 	if err := m.Save(); err != nil {
 		return
 	}
@@ -66,7 +69,9 @@ func (m *DBStorage) Render(w http.ResponseWriter) (err error) {
 }
 
 func (m *DBStorage) GetIntValue(metricName string) (value int64, err error) {
+	m.Mutex.RLock()
 	value, ok := m.Metrics.Counter[metricName]
+	m.Mutex.RUnlock()
 	if !ok {
 		err = errors.New("no such metric")
 	}
@@ -74,7 +79,9 @@ func (m *DBStorage) GetIntValue(metricName string) (value int64, err error) {
 }
 
 func (m *DBStorage) GetFloatValue(metricName string) (value float64, err error) {
+	m.Mutex.RLock()
 	value, ok := m.Metrics.Gauge[metricName]
+	m.Mutex.RUnlock()
 	if !ok {
 		err = errors.New("no such metric")
 	}
@@ -85,14 +92,18 @@ func (m *DBStorage) GetValue(metricType string, metricName string) (str string, 
 
 	switch metricType {
 	case "gauge":
+		m.Mutex.RLock()
 		value, ok := m.Metrics.Gauge[metricName]
+		m.Mutex.RUnlock()
 		if !ok {
 			err = errors.New("no such metric")
 			return
 		}
 		str = strconv.FormatFloat(value, 'f', -1, 64)
 	case "counter":
+		m.Mutex.RLock()
 		value, ok := m.Metrics.Counter[metricName]
+		m.Mutex.RUnlock()
 		if !ok {
 			err = errors.New("no such metric")
 			return

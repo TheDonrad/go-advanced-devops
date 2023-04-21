@@ -18,8 +18,9 @@ func (m *DBStorage) Save() error {
 			log.Print(err.Error())
 		}
 	}()
-
+	m.Mutex.RLock()
 	writeMetric(db, m)
+	m.Mutex.RUnlock()
 	return nil
 }
 
