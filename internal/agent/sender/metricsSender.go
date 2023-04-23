@@ -34,7 +34,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit 
 			MType: "gauge",
 			Value: value,
 		}
-		met.Hash = calchash.Calculate(key, met.MType, met.ID, met.Value)
+		met.Hash = calchash.Calculate[float64](key, met.MType, met.ID, met.Value)
 		metricsToSend[i] = met
 		i++
 
@@ -46,7 +46,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit 
 			MType: "counter",
 			Delta: value,
 		}
-		met.Hash = calchash.Calculate(key, met.MType, met.ID, met.Delta)
+		met.Hash = calchash.Calculate[int64](key, met.MType, met.ID, met.Delta)
 		metricsToSend[i] = met
 		i++
 	}

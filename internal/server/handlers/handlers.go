@@ -21,7 +21,6 @@ type Storage interface {
 	GetFloatValue(metricName string) (value float64, err error)
 	Ping() (err error)
 	Save() (err error)
-	Restore()
 }
 
 type Metric struct {
@@ -86,14 +85,14 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 	case "gauge":
 		h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 		hash := met.Hash
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+		met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	case "counter":
 		h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 		hash := met.Hash
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+		met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
@@ -143,10 +142,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+		met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+		met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return
@@ -208,13 +207,14 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		case "gauge":
 			h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 			hash := met.Hash
+			met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
 		case "counter":
 			h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 			hash := met.Hash
-			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+			met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
