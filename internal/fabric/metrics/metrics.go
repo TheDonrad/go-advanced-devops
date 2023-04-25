@@ -1,4 +1,4 @@
-package metricsstorage
+package metrics
 
 import (
 	"html/template"

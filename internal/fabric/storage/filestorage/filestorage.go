@@ -2,16 +2,17 @@ package filestorage
 
 import (
 	"errors"
-	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
+
+	"goAdvancedTpl/internal/fabric/metrics"
 )
 
 type FileStorage struct {
-	Metrics  metricsstorage.MetricStorage
+	Metrics  metrics.MetricStorage
 	Settings struct {
 		StoreFile     string
 		StoreInterval time.Duration
@@ -21,7 +22,7 @@ type FileStorage struct {
 
 func NewFileStorage(storeInterval time.Duration, storeFile string, restore bool) *FileStorage {
 	fs := &FileStorage{
-		Metrics: metricsstorage.NewMetricStorage(),
+		Metrics: metrics.NewMetricStorage(),
 		Settings: struct {
 			StoreFile     string
 			StoreInterval time.Duration

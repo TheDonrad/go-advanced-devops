@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"goAdvancedTpl/internal/agent/collector"
-	"goAdvancedTpl/internal/fabric/calchash"
-	"golang.org/x/sync/errgroup"
 	"net/http"
 	"time"
+
+	"goAdvancedTpl/internal/agent/collector"
+	"goAdvancedTpl/internal/fabric/calchash"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Metric struct {

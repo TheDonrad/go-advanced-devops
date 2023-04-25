@@ -2,9 +2,10 @@ package filestorage
 
 import (
 	"encoding/json"
-	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"log"
 	"os"
+
+	"goAdvancedTpl/internal/fabric/metrics"
 )
 
 func (m *FileStorage) Restore() {
@@ -48,7 +49,7 @@ func (c *consumer) Close() error {
 	return c.file.Close()
 }
 
-func (c *consumer) readEvent(metStorage *metricsstorage.MetricStorage) error {
+func (c *consumer) readEvent(metStorage *metrics.MetricStorage) error {
 	if err := c.decoder.Decode(metStorage); err != nil {
 		return err
 	}

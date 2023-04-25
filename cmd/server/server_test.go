@@ -1,14 +1,15 @@
 package main
 
 import (
-	"goAdvancedTpl/internal/fabric/storage/filestorage"
-	"goAdvancedTpl/internal/server/handlers"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"goAdvancedTpl/internal/fabric/storage/filestorage"
+	"goAdvancedTpl/internal/server/handlers"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"

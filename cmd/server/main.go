@@ -1,15 +1,17 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"log"
+	"net/http"
+
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/config"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/servermiddleware"
-	"log"
-	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {

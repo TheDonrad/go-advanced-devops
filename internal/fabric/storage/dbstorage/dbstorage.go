@@ -3,16 +3,18 @@ package dbstorage
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v5"
-	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"log"
 	"net/http"
 	"strconv"
 	"sync"
+
+	"goAdvancedTpl/internal/fabric/metrics"
+
+	"github.com/jackc/pgx/v5"
 )
 
 type DBStorage struct {
-	Metrics  metricsstorage.MetricStorage
+	Metrics  metrics.MetricStorage
 	Settings struct {
 		DBConnString string
 	}
@@ -21,7 +23,7 @@ type DBStorage struct {
 
 func NewDBStorage(connString string, restore bool) *DBStorage {
 	s := &DBStorage{
-		Metrics:  metricsstorage.NewMetricStorage(),
+		Metrics:  metrics.NewMetricStorage(),
 		Settings: struct{ DBConnString string }{DBConnString: connString},
 	}
 	if restore {

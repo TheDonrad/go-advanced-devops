@@ -3,8 +3,9 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
-	_ "github.com/jackc/pgx/v5/stdlib"
 	"log"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func (m *DBStorage) Save() error {
