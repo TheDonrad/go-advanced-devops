@@ -1,22 +1,23 @@
 package collector
 
 import (
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/mem"
-
 	"context"
-	"goAdvancedTpl/internal/fabric/logs"
-	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"math/rand"
 	"runtime"
+
+	"goAdvancedTpl/internal/fabric/logs"
+	"goAdvancedTpl/internal/fabric/metrics"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
-type MetricsList metricsstorage.MetricStorage
+type MetricsList metrics.MetricStorage
 
 func NewMetrics() *MetricsList {
-	metrics := MetricsList(metricsstorage.NewMetricStorage())
-	metrics.Counter[counter] = 0
-	return &metrics
+	metricsList := MetricsList(metrics.NewMetricStorage())
+	metricsList.Counter[counter] = 0
+	return &metricsList
 }
 
 const counter = "PollCount"

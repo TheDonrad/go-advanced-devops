@@ -2,10 +2,11 @@ package config
 
 import (
 	"flag"
-	"github.com/caarlos0/env/v6"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/caarlos0/env/v6"
 )
 
 type SettingsList struct {
@@ -16,7 +17,7 @@ type SettingsList struct {
 	RateLimit      int
 }
 
-func SetConfig() *SettingsList {
+func Config() *SettingsList {
 
 	settings := SettingsList{
 		Addr:           "127.0.0.1:8080",

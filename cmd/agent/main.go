@@ -1,19 +1,20 @@
 package main
 
 import (
-	"goAdvancedTpl/internal/agent/collector"
-	"goAdvancedTpl/internal/agent/config"
-	"goAdvancedTpl/internal/agent/sender"
-	"goAdvancedTpl/internal/fabric/logs"
 	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"goAdvancedTpl/internal/agent/collector"
+	"goAdvancedTpl/internal/agent/config"
+	"goAdvancedTpl/internal/agent/sender"
+	"goAdvancedTpl/internal/fabric/logs"
 )
 
 func main() {
 
-	settings := config.SetConfig()
+	settings := config.Config()
 
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats

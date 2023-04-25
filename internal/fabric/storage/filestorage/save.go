@@ -2,9 +2,10 @@ package filestorage
 
 import (
 	"encoding/json"
-	"goAdvancedTpl/internal/fabric/metricsstorage"
 	"log"
 	"os"
+
+	"goAdvancedTpl/internal/fabric/metrics"
 )
 
 func (m *FileStorage) Save() error {
@@ -43,7 +44,7 @@ func newProducer(fileName string) (*producer, error) {
 	}, nil
 }
 
-func (p *producer) writeEvent(metStorage *metricsstorage.MetricStorage) error {
+func (p *producer) writeEvent(metStorage *metrics.MetricStorage) error {
 	return p.encoder.Encode(&metStorage)
 }
 

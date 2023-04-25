@@ -1,8 +1,9 @@
 package main
 
 import (
-	"goAdvancedTpl/internal/agent/collector"
 	"testing"
+
+	"goAdvancedTpl/internal/agent/collector"
 
 	"github.com/stretchr/testify/assert"
 )

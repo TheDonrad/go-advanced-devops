@@ -2,8 +2,9 @@ package dbstorage
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
 	"log"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func (m *DBStorage) Restore() {
