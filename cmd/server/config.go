@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"github.com/caarlos0/env/v6"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -64,7 +64,7 @@ func (srvConfig *serverConfig) setConfigEnv() {
 
 	err := env.Parse(&cfg)
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 
@@ -75,7 +75,7 @@ func (srvConfig *serverConfig) setConfigEnv() {
 	if len(strings.TrimSpace(cfg.StoreInterval)) != 0 {
 		srvConfig.storeInterval, err = time.ParseDuration(cfg.StoreInterval)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 			return
 		}
 	}
@@ -83,7 +83,7 @@ func (srvConfig *serverConfig) setConfigEnv() {
 	if len(strings.TrimSpace(cfg.Restore)) != 0 {
 		srvConfig.restore, err = strconv.ParseBool(cfg.Restore)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println(err.Error())
 			return
 		}
 	}

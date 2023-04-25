@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5/middleware"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/servermiddleware"
 	"goAdvancedTpl/internal/server/storage"
+	"log"
 	"net/http"
 	"time"
 
@@ -23,14 +23,14 @@ func main() {
 		for {
 			<-time.After(srvConfig.storeInterval)
 			if err := metStorage.Save(savingSettings.Database, savingSettings.StoreFile); err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 			}
 		}
 	}()
 	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
-	er := http.ListenAndServe(srvConfig.addr, r)
-	if er != nil {
-		fmt.Println(er.Error())
+	err := http.ListenAndServe(srvConfig.addr, r)
+	if err != nil {
+		log.Println(err.Error())
 	}
 
 }

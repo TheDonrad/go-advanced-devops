@@ -2,8 +2,9 @@ package servermiddleware
 
 import (
 	"compress/gzip"
-	"fmt"
+	"errors"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -30,14 +31,14 @@ func GzipHandle(next http.Handler) http.Handler {
 
 		// создаём gzip.Writer поверх текущего w
 		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
-		if err != nil && err != io.EOF {
+		if err != nil && !errors.Is(err, io.EOF) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		defer func() {
 			err = gz.Close()
 			if err != nil && err != io.EOF {
-				fmt.Println(err.Error())
+				log.Print(err.Error())
 			}
 		}()
 

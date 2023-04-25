@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"goAdvancedTpl/internal/fabric/calchash"
 	"io"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -78,7 +79,7 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	met := Metric{}
 	var err error
-	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -135,7 +136,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var err error
 	met := Metric{}
-	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && err != io.EOF {
+	if err = json.NewDecoder(r.Body).Decode(&met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -199,7 +200,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err = json.Unmarshal(body, &met); err != nil && err != io.EOF {
+	if err = json.Unmarshal(body, &met); err != nil && !errors.Is(err, io.EOF) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -244,7 +245,7 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 	}
 	b, _ := json.Marshal(sendMet[0]) // Для обхода ошибки автотестов
 	if err = h.metrics.Save(h.dbConnString, ""); err != nil {
-		fmt.Println(err.Error())
+		log.Println(err.Error())
 	}
 
 	w.Header().Add("Content-Type", "application/json")

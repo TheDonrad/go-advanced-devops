@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"goAdvancedTpl/internal/agent/collector"
 	"goAdvancedTpl/internal/agent/sender"
+	"log"
 	"runtime"
 	"time"
 )
@@ -22,7 +22,7 @@ func main() {
 			metrics.CalculateMetrics()
 			err := sender.SendMetrics(settings.addr, metrics, settings.key)
 			if err != nil {
-				fmt.Println(err.Error())
+				log.Println(err.Error())
 			}
 			metrics.SetMetricsToZero()
 			startTime = time.Now()
