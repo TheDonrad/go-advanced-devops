@@ -5,11 +5,13 @@ import (
 	"net/http"
 )
 
+// MetricStorage хранит метрики
 type MetricStorage struct {
 	Gauge   map[string]float64
 	Counter map[string]int64
 }
 
+// NewMetricStorage создаёт объект для хранения метрик
 func NewMetricStorage() MetricStorage {
 	return MetricStorage{
 		Gauge:   make(map[string]float64),
@@ -17,6 +19,7 @@ func NewMetricStorage() MetricStorage {
 	}
 }
 
+// Render возвращает все метрики в виде html-страницы
 func (m MetricStorage) Render(w http.ResponseWriter) error {
 	content := pageTemplate()
 

@@ -12,6 +12,7 @@ var (
 	once   sync.Once
 )
 
+// New возвращает объект для логирования
 func New() *log.Logger {
 	once.Do(
 		func() {

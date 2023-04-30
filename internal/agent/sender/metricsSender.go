@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"goAdvancedTpl/internal/agent/collector"
@@ -13,6 +14,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Metric служит для сериализации значения метрики в json
 type Metric struct {
 	ID    string  `json:"id"`              // имя метрики
 	MType string  `json:"type"`            // параметр, принимающий значение gauge или counter
@@ -23,6 +25,7 @@ type Metric struct {
 
 type metricsMap []Metric
 
+// SendMetrics отправляет метрики на сервер
 func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit int) (err error) {
 
 	client := &http.Client{}
@@ -107,11 +110,11 @@ func sendCollection(addr string, metricsToSend metricsMap, client *http.Client) 
 func sendOneString(addr string, met Metric, client *http.Client) error {
 	var endpoint string
 	if met.MType == "gauge" {
-		endpoint = fmt.Sprintf("http://%s/update/%s/%s/%f",
-			addr, met.MType, met.ID, met.Value)
+		endpoint = "http://" + addr + "/update/" + met.MType + "/" + met.ID + "/" +
+			strconv.FormatFloat(met.Value, 'E', -1, 64)
 	} else {
-		endpoint = fmt.Sprintf("http://%s/update/%s/%s/%d",
-			addr, met.MType, met.ID, met.Delta)
+		endpoint = "http://" + addr + "/update/" + met.MType + "/" + met.ID + "/" +
+			strconv.FormatInt(met.Delta, 10)
 	}
 	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(""))
 	if err != nil {

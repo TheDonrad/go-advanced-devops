@@ -1,3 +1,4 @@
+// Package config служит для определения настроек серевера сбора метрик
 package config
 
 import (
@@ -10,15 +11,20 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
+// ServerConfig хранит настройки сервера
+// Если заполнен параметр DBConnString, считаем, что в качестве хранилища следует использовать БД
+// Иначе - файл
 type ServerConfig struct {
-	Addr          string
-	StoreInterval time.Duration
-	StoreFile     string
-	Restore       bool
-	Key           string
-	DBConnString  string
+	Addr          string        // Адрес для получения метрик
+	StoreInterval time.Duration // Период сохранения настроек
+	StoreFile     string        // Путь к файлу для хранения метрик
+	Restore       bool          // Восстанавливать метрики из хранилища при запуске
+	Key           string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
+	DBConnString  string        // Строка соединения с БД
 }
 
+// SrvConfig возвращает настройки агента из переменных окружения или флагов запуска.
+// У переменных окружения приоритет перед флагами
 func SrvConfig() *ServerConfig {
 	srvConfig := ServerConfig{
 		Addr:          "127.0.0.1:8080",

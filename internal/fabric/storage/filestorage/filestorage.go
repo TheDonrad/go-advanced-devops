@@ -20,6 +20,7 @@ type FileStorage struct {
 	Mutex sync.RWMutex
 }
 
+// NewFileStorage создаёт объект для хранения метрик в файле
 func NewFileStorage(storeInterval time.Duration, storeFile string, restore bool) *FileStorage {
 	fs := &FileStorage{
 		Metrics: metrics.NewMetricStorage(),

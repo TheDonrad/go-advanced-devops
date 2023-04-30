@@ -1,3 +1,4 @@
+// Package config служит для определения настроек агента по сбору метрик
 package config
 
 import (
@@ -9,14 +10,17 @@ import (
 	"github.com/caarlos0/env/v6"
 )
 
+// SettingsList хранит настройки агента по сбору метрик
 type SettingsList struct {
-	Addr           string
-	ReportInterval time.Duration
-	PollInterval   time.Duration
-	Key            string
-	RateLimit      int
+	Addr           string        // Адрес для отправки метрик
+	ReportInterval time.Duration // Период отправки
+	PollInterval   time.Duration // Период сбора
+	Key            string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
+	RateLimit      int           // ограничение RPS
 }
 
+// Config возвращает настройки агента из переменных окружения или флагов запуска.
+// У переменных окружения приоритет перед флагами
 func Config() *SettingsList {
 
 	settings := SettingsList{

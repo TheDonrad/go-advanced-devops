@@ -1,6 +1,9 @@
+// сервис для сбора метрик ОС
 package main
 
 import (
+	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -40,6 +43,7 @@ func main() {
 				time.Sleep(time.Second)
 				continue
 			}
+
 			metrics.SetAdditionalMetrics()
 			time.Sleep(settings.ReportInterval)
 		}
@@ -66,6 +70,6 @@ func main() {
 			atomic.StoreInt32(&sendingInProgress, 0)
 		}
 	}()
-
+	http.ListenAndServe(":128", nil)
 	wg.Wait()
 }
