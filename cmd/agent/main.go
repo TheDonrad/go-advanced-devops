@@ -70,6 +70,9 @@ func main() {
 			atomic.StoreInt32(&sendingInProgress, 0)
 		}
 	}()
-	http.ListenAndServe(":128", nil)
+	err := http.ListenAndServe(":128", nil)
+	if err != nil {
+		logs.New().Println(err.Error())
+	}
 	wg.Wait()
 }

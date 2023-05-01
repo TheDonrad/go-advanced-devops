@@ -9,8 +9,8 @@ import (
 
 func TestMetricsList_CalculateMetrics(t *testing.T) {
 	tests := []struct {
-		name    string
 		metrics *MetricsList
+		name    string
 		want    float64
 	}{
 		{
@@ -31,8 +31,8 @@ func TestMetricsList_CalculateMetrics(t *testing.T) {
 
 func TestMetricsList_SetAdditionalMetrics(t *testing.T) {
 	tests := []struct {
-		name    string
 		metrics *MetricsList
+		name    string
 	}{
 		{
 			name:    "SetAdditionalMetrics",
@@ -50,8 +50,8 @@ func TestMetricsList_SetAdditionalMetrics(t *testing.T) {
 func TestMetricsList_SetMetrics(t *testing.T) {
 	var memStats runtime.MemStats
 	tests := []struct {
-		name    string
 		metrics *MetricsList
+		name    string
 	}{
 		{
 			name:    "SetMetrics",
@@ -70,8 +70,8 @@ func TestMetricsList_SetMetrics(t *testing.T) {
 func TestMetricsList_SetMetricsToZero(t *testing.T) {
 	var memStats runtime.MemStats
 	tests := []struct {
-		name    string
 		metrics *MetricsList
+		name    string
 	}{
 		{
 			name:    "SetMetrics",

@@ -10,8 +10,8 @@ import (
 
 func TestCalculateMetrics(t *testing.T) {
 	tests := []struct {
-		name    string
 		metrics *collector.MetricsList
+		name    string
 		want    float64
 	}{
 		{

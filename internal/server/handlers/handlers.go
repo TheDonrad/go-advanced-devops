@@ -27,10 +27,10 @@ type IStorage interface {
 type Metric struct {
 	ID    string `json:"id"`              // имя метрики
 	MType string `json:"type"`            // параметр, принимающий значение gauge или counter
+	Hash  string `json:"hash,omitempty"`  // значение хеш-функции
 	Delta int64  `json:"delta,omitempty"` // значение метрики в случае передачи counter
 	// TODO: проверить указатель и без omitempty
 	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
-	Hash  string  `json:"hash,omitempty"`  // значение хеш-функции
 }
 
 type APIHandler struct {

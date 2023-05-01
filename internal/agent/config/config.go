@@ -12,11 +12,12 @@ import (
 
 // SettingsList хранит настройки агента по сбору метрик
 type SettingsList struct {
+	Key            string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
 	Addr           string        // Адрес для отправки метрик
+	RateLimit      int           // ограничение RPS
 	ReportInterval time.Duration // Период отправки
 	PollInterval   time.Duration // Период сбора
-	Key            string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
-	RateLimit      int           // ограничение RPS
+
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
