@@ -1,23 +1,30 @@
 package collector
 
 import (
-	"goAdvancedTpl/internal/fabric/metricsstorage"
+	"context"
 	"math/rand"
 	"runtime"
+
+	"goAdvancedTpl/internal/fabric/logs"
+	"goAdvancedTpl/internal/fabric/metrics"
+
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
-type MetricsList metricsstorage.MetricStorage
+type MetricsList metrics.MetricStorage
 
 func NewMetrics() *MetricsList {
-	metrics := MetricsList(metricsstorage.NewMetricStorage())
-	metrics.Counter[counter] = 0
-	return &metrics
+	metricsList := MetricsList(metrics.NewMetricStorage())
+	metricsList.Counter[counter] = 0
+	return &metricsList
 }
 
 const counter = "PollCount"
 
 func (metrics *MetricsList) SetMetrics(memStats runtime.MemStats) {
 	runtime.ReadMemStats(&memStats)
+	metrics.Counter[counter]++
 	metrics.Gauge["BuckHashSys"] += float64(memStats.BuckHashSys) + 1
 	metrics.Gauge["Frees"] += float64(memStats.Frees) + 1
 	metrics.Gauge["GCCPUFraction"] += float64(memStats.GCCPUFraction) + 1
@@ -46,7 +53,22 @@ func (metrics *MetricsList) SetMetrics(memStats runtime.MemStats) {
 	metrics.Gauge["TotalAlloc"] += float64(memStats.TotalAlloc) + 1
 	metrics.Gauge["Alloc"] += float64(memStats.Alloc) + 1
 	metrics.Gauge["RandomValue"] += rand.Float64()
-	metrics.Counter[counter]++
+
+}
+func (metrics *MetricsList) SetAdditionalMetrics() {
+	v, err := mem.VirtualMemory()
+	if err != nil {
+		logs.New().Println(err.Error())
+		return
+	}
+	metrics.Gauge["TotalMemory"] = float64(v.Total) + 1
+	metrics.Gauge["FreeMemory"] = float64(v.Free) + 1
+	c, err := cpu.PercentWithContext(context.Background(), 0, false)
+	if err != nil {
+		logs.New().Println(err.Error())
+		return
+	}
+	metrics.Gauge["CPUutilization1"] = c[0] + rand.Float64()
 }
 
 func (metrics *MetricsList) CalculateMetrics() {
@@ -61,9 +83,9 @@ func (metrics *MetricsList) CalculateMetrics() {
 
 func (metrics *MetricsList) SetMetricsToZero() {
 	for s := range metrics.Gauge {
-		metrics.Gauge[s] = 0
+		metrics.Gauge[s] = 1
 	}
 	for s := range metrics.Counter {
-		metrics.Counter[s] = 0
+		metrics.Counter[s] = 1
 	}
 }

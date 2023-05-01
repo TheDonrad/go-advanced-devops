@@ -1,43 +1,45 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
-	"goAdvancedTpl/internal/server/handlers"
-	"goAdvancedTpl/internal/server/servermiddleware"
-	"goAdvancedTpl/internal/server/storage"
 	"log"
 	"net/http"
-	"time"
+
+	"goAdvancedTpl/internal/fabric/storage/dbstorage"
+	"goAdvancedTpl/internal/fabric/storage/filestorage"
+	"goAdvancedTpl/internal/server/config"
+	"goAdvancedTpl/internal/server/handlers"
+	"goAdvancedTpl/internal/server/servermiddleware"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
 
-	srvConfig := srvConfig()
+	srvConfig := config.SrvConfig()
+	var metStorage handlers.Storage
+	if srvConfig.DBConnString != "" {
+		metStorage = dbstorage.NewDBStorage(srvConfig.DBConnString)
 
-	metStorage := storage.NewMetricStorage()
-	savingSettings := storage.NewSavingSettings(srvConfig.storeInterval, srvConfig.storeFile, srvConfig.dbConnString)
-	metStorage.Restore(srvConfig.restore, savingSettings)
-	go func() {
-		for {
-			<-time.After(srvConfig.storeInterval)
-			if err := metStorage.Save(savingSettings.Database, savingSettings.StoreFile); err != nil {
-				log.Println(err.Error())
-			}
-		}
-	}()
-	r := routers(metStorage, srvConfig.key, srvConfig.dbConnString)
-	err := http.ListenAndServe(srvConfig.addr, r)
+	} else {
+		metStorage = filestorage.NewFileStorage(srvConfig.StoreInterval, srvConfig.StoreFile)
+	}
+
+	if srvConfig.Restore {
+		metStorage.Restore()
+	}
+
+	r := routers(metStorage, srvConfig.Key)
+	err := http.ListenAndServe(srvConfig.Addr, r)
 	if err != nil {
 		log.Println(err.Error())
 	}
 
 }
 
-func routers(metStorage *storage.MetricStorage, key string, dbConnString string) *chi.Mux {
+func routers(metStorage handlers.Storage, key string) *chi.Mux {
 
-	h := handlers.NewAPIHandler(metStorage, key, dbConnString)
+	h := handlers.NewAPIHandler(metStorage, key)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)
