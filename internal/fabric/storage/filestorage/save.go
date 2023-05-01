@@ -1,18 +1,18 @@
-package storage
+package filestorage
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
+
+	"goAdvancedTpl/internal/fabric/metrics"
 )
 
-func (m *MetricStorage) saveToFile(fileName string) {
+func (m *FileStorage) Save() error {
 
-	producer, err := newProducer(fileName)
+	producer, err := newProducer(m.Settings.StoreFile)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		return err
 	}
 
 	defer func() {
@@ -21,10 +21,10 @@ func (m *MetricStorage) saveToFile(fileName string) {
 			log.Print(err.Error())
 		}
 	}()
-	if err := producer.writeEvent(m); err != nil {
-		fmt.Println(err.Error())
-		return
-	}
+	m.Mutex.RLock()
+	err = producer.writeEvent(&m.Metrics)
+	m.Mutex.RUnlock()
+	return err
 }
 
 type producer struct {
@@ -44,7 +44,7 @@ func newProducer(fileName string) (*producer, error) {
 	}, nil
 }
 
-func (p *producer) writeEvent(metStorage *MetricStorage) error {
+func (p *producer) writeEvent(metStorage *metrics.MetricStorage) error {
 	return p.encoder.Encode(&metStorage)
 }
 

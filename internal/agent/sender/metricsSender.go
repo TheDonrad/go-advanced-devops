@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"time"
+
 	"goAdvancedTpl/internal/agent/collector"
 	"goAdvancedTpl/internal/fabric/calchash"
-	"net/http"
+
+	"golang.org/x/sync/errgroup"
 )
 
 type Metric struct {
@@ -19,7 +23,7 @@ type Metric struct {
 
 type metricsMap []Metric
 
-func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err error) {
+func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit int) (err error) {
 
 	client := &http.Client{}
 	length := len(metrics.Gauge) + len(metrics.Counter)
@@ -37,6 +41,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err e
 		i++
 
 	}
+
 	for name, value := range metrics.Counter {
 		met := Metric{
 			ID:    name,
@@ -47,6 +52,47 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err e
 		metricsToSend[i] = met
 		i++
 	}
+
+	if limit <= 1 {
+
+		err = sendCollection(addr, metricsToSend, client)
+		if err != nil {
+			return err
+		}
+
+		if err = sendAllMetrics(addr, metricsToSend, client); err != nil {
+			return err
+		}
+	} else {
+		g := &errgroup.Group{}
+		for j := 0; j < len(metricsToSend)-1; j++ {
+			g.Go(func() error {
+				lErr := sendCollection(addr, metricsToSend[j:j+1], client)
+				if lErr != nil {
+					return lErr
+				}
+				return nil
+			})
+			if j > 0 && j%limit == 0 {
+				time.Sleep(time.Second)
+			}
+		}
+
+		g.Go(func() error {
+			lErr := sendAllMetrics(addr, metricsToSend, client)
+			if lErr != nil {
+				return lErr
+			}
+			return nil
+		})
+		if err := g.Wait(); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+func sendCollection(addr string, metricsToSend metricsMap, client *http.Client) (err error) {
 	for _, m := range metricsToSend {
 		if err = sendOneString(addr, m, client); err != nil {
 			return err
@@ -55,10 +101,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string) (err e
 			return err
 		}
 	}
-	if err = sendAllMetrics(addr, metricsToSend, client); err != nil {
-		return err
-	}
-	return err
+	return nil
 }
 
 func sendOneString(addr string, met Metric, client *http.Client) error {
