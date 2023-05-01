@@ -2,8 +2,6 @@
 package main
 
 import (
-	"net/http"
-	_ "net/http/pprof"
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -13,11 +11,20 @@ import (
 	"goAdvancedTpl/internal/agent/config"
 	"goAdvancedTpl/internal/agent/sender"
 	"goAdvancedTpl/internal/fabric/logs"
+	"goAdvancedTpl/internal/fabric/onstart"
+)
+
+var (
+	BuildVersion string
+	BuildDate    string
+	BuildCommit  string
 )
 
 func main() {
 
-	settings := config.Config()
+	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
+
+	settings := config.Config(true)
 
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
@@ -70,9 +77,6 @@ func main() {
 			atomic.StoreInt32(&sendingInProgress, 0)
 		}
 	}()
-	err := http.ListenAndServe(":128", nil)
-	if err != nil {
-		logs.New().Println(err.Error())
-	}
+
 	wg.Wait()
 }

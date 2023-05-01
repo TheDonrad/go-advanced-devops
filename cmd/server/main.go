@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"goAdvancedTpl/internal/fabric/onstart"
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/config"
@@ -15,7 +16,15 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+var (
+	BuildVersion string
+	BuildDate    string
+	BuildCommit  string
+)
+
 func main() {
+
+	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
 
 	srvConfig := config.SrvConfig()
 	var h *handlers.APIHandler

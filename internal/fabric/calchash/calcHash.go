@@ -7,12 +7,7 @@ import (
 	"strings"
 )
 
-type myConstraint interface {
-	int64 | float64
-}
-
-// Calculate вычисляет шифрованный хеш по алгоритму sha256
-func Calculate[T myConstraint](key string, mType string, id string, value T) string {
+func Calculate[T int64 | float64](key string, mType string, id string, value T) string {
 	if len(strings.TrimSpace(key)) == 0 {
 		return ""
 	}

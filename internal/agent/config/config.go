@@ -22,7 +22,7 @@ type SettingsList struct {
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
 // У переменных окружения приоритет перед флагами
-func Config() *SettingsList {
+func Config(parseFlags bool) *SettingsList {
 
 	settings := SettingsList{
 		Addr:           "127.0.0.1:8080",
@@ -31,7 +31,9 @@ func Config() *SettingsList {
 		Key:            "",
 		RateLimit:      5,
 	}
-	settings.setConfigFlags()
+	if parseFlags {
+		settings.setConfigFlags()
+	}
 	settings.setConfigEnv()
 	return &settings
 }
