@@ -21,9 +21,10 @@ type DBStorage struct {
 	Mutex sync.RWMutex
 }
 
-// NewDBStorage создаёт объект для хранения метрик в СУБД
-func NewDBStorage(connString string, restore bool) *DBStorage {
-	s := &DBStorage{
+
+func NewDBStorage(connString string) *DBStorage {
+	return &DBStorage{
+
 		Metrics:  metrics.NewMetricStorage(),
 		Settings: struct{ DBConnString string }{DBConnString: connString},
 	}
