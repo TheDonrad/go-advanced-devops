@@ -1,3 +1,4 @@
+// Package collector предназначет для сбора метрик, а также манипуляций над ними
 package collector
 
 import (
@@ -12,8 +13,10 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
+// MetricsList хранит метрики
 type MetricsList metrics.MetricStorage
 
+// NewMetrics создаёт объект для хранения метрик
 func NewMetrics() *MetricsList {
 	metricsList := MetricsList(metrics.NewMetricStorage())
 	metricsList.Counter[counter] = 0
@@ -22,6 +25,7 @@ func NewMetrics() *MetricsList {
 
 const counter = "PollCount"
 
+// SetMetrics собирает метрики из пакета runtime
 func (metrics *MetricsList) SetMetrics(memStats runtime.MemStats) {
 	runtime.ReadMemStats(&memStats)
 	metrics.Counter[counter]++
@@ -55,6 +59,8 @@ func (metrics *MetricsList) SetMetrics(memStats runtime.MemStats) {
 	metrics.Gauge["RandomValue"] += rand.Float64()
 
 }
+
+// SetAdditionalMetrics собирает метрики из пакетов mem и cpu
 func (metrics *MetricsList) SetAdditionalMetrics() {
 	v, err := mem.VirtualMemory()
 	if err != nil {
@@ -71,6 +77,7 @@ func (metrics *MetricsList) SetAdditionalMetrics() {
 	metrics.Gauge["CPUutilization1"] = c[0] + rand.Float64()
 }
 
+// CalculateMetrics рассчитывет среднее значение метрик перед отправкой на сервер
 func (metrics *MetricsList) CalculateMetrics() {
 	if metrics.Counter[counter] == 0 {
 		return
@@ -81,6 +88,7 @@ func (metrics *MetricsList) CalculateMetrics() {
 	}
 }
 
+// SetMetricsToZero обнуляет значения метрик после отправки на сервер
 func (metrics *MetricsList) SetMetricsToZero() {
 	for s := range metrics.Gauge {
 		metrics.Gauge[s] = 1

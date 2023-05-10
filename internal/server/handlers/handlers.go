@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-type Storage interface {
+type IStorage interface {
 	AddValue(metricType string, metricName string, f float64, i int64)
 	Render(w http.ResponseWriter) error
 	GetValue(metricType string, metricName string) (string, error)
@@ -22,7 +22,6 @@ type Storage interface {
 	GetFloatValue(metricName string) (value float64, err error)
 	Ping() (err error)
 	Save() (err error)
-	Restore()
 }
 
 type Metric struct {
@@ -35,11 +34,11 @@ type Metric struct {
 }
 
 type APIHandler struct {
-	metrics Storage
+	metrics IStorage
 	key     string
 }
 
-func NewAPIHandler(metrics Storage, key string) (h *APIHandler) {
+func NewAPIHandler(metrics IStorage, key string) (h *APIHandler) {
 	h = &APIHandler{
 		metrics: metrics,
 		key:     key,
@@ -47,6 +46,7 @@ func NewAPIHandler(metrics Storage, key string) (h *APIHandler) {
 	return
 }
 
+// WriteMetric записывает метрику переданную в адресе HTTP-запроса
 func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 	metricType := chi.URLParam(r, "metricType")
 	metricType = strings.ToLower(metricType)
@@ -74,6 +74,7 @@ func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// WriteWholeMetric записывает метрику Metric, переданную в формате JSON
 func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	met := Metric{}
@@ -87,14 +88,14 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 	case "gauge":
 		h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 		hash := met.Hash
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+		met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
 	case "counter":
 		h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 		hash := met.Hash
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+		met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 		if hash != met.Hash {
 			http.Error(w, "Invalid hash", http.StatusBadRequest)
 		}
@@ -111,6 +112,7 @@ func (h *APIHandler) WriteWholeMetric(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetMetric возвращает значение метрики строкой
 func (h *APIHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 
 	metricType := chi.URLParam(r, "metricType")
@@ -131,6 +133,7 @@ func (h *APIHandler) GetMetric(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetWholeMetric возвращает метрику Metric в формате JSON
 func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 
 	var err error
@@ -144,10 +147,10 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	switch met.MType {
 	case "gauge":
 		met.Value, err = h.metrics.GetFloatValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Value)
+		met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 	case "counter":
 		met.Delta, err = h.metrics.GetIntValue(met.ID)
-		met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+		met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 	default:
 		http.Error(w, "metric not found", http.StatusNotFound)
 		return
@@ -166,6 +169,7 @@ func (h *APIHandler) GetWholeMetric(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AllMetrics возвращает все метрики в формате HTML
 func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Add("Content-Type", "text/html")
 	err := h.metrics.Render(w)
@@ -175,6 +179,7 @@ func (h *APIHandler) AllMetrics(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// Ping проверяет доступность хранилища
 func (h *APIHandler) Ping(w http.ResponseWriter, _ *http.Request) {
 
 	err := h.metrics.Ping()
@@ -190,6 +195,7 @@ func (h *APIHandler) Ping(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// WriteAllMetrics записывает массив метрик Metric, переданный в формате JSON
 func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 
 	var met []Metric
@@ -209,13 +215,14 @@ func (h *APIHandler) WriteAllMetrics(w http.ResponseWriter, r *http.Request) {
 		case "gauge":
 			h.metrics.AddValue(met.MType, met.ID, met.Value, 0)
 			hash := met.Hash
+			met.Hash = calchash.Calculate[float64](h.key, met.MType, met.ID, met.Value)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}
 		case "counter":
 			h.metrics.AddValue(met.MType, met.ID, 0, met.Delta)
 			hash := met.Hash
-			met.Hash = calchash.Calculate(h.key, met.MType, met.ID, met.Delta)
+			met.Hash = calchash.Calculate[int64](h.key, met.MType, met.ID, met.Delta)
 			if hash != met.Hash {
 				http.Error(w, "Invalid hash", http.StatusBadRequest)
 			}

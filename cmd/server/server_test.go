@@ -65,7 +65,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 }
 
 func NewRouter() chi.Router {
-	metStorage := filestorage.NewFileStorage(5*time.Second, "")
+	metStorage := filestorage.NewFileStorage(5*time.Second, "", false)
 	h := handlers.NewAPIHandler(metStorage, "")
 	r := chi.NewRouter()
 

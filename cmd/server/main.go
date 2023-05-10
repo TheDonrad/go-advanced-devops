@@ -1,3 +1,4 @@
+// сервис для хранения метрик ОС и получения их значений
 package main
 
 import (
@@ -17,19 +18,17 @@ import (
 func main() {
 
 	srvConfig := config.SrvConfig()
-	var metStorage handlers.Storage
+	var h *handlers.APIHandler
 	if srvConfig.DBConnString != "" {
-		metStorage = dbstorage.NewDBStorage(srvConfig.DBConnString)
+		metStorage := dbstorage.NewDBStorage(srvConfig.DBConnString, srvConfig.Restore)
+		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
 
 	} else {
-		metStorage = filestorage.NewFileStorage(srvConfig.StoreInterval, srvConfig.StoreFile)
+		metStorage := filestorage.NewFileStorage(srvConfig.StoreInterval, srvConfig.StoreFile, srvConfig.Restore)
+		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
 	}
 
-	if srvConfig.Restore {
-		metStorage.Restore()
-	}
-
-	r := routers(metStorage, srvConfig.Key)
+	r := routers(h)
 	err := http.ListenAndServe(srvConfig.Addr, r)
 	if err != nil {
 		log.Println(err.Error())
@@ -37,9 +36,8 @@ func main() {
 
 }
 
-func routers(metStorage handlers.Storage, key string) *chi.Mux {
+func routers(h *handlers.APIHandler) *chi.Mux {
 
-	h := handlers.NewAPIHandler(metStorage, key)
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)

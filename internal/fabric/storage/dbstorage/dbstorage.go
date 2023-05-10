@@ -21,11 +21,17 @@ type DBStorage struct {
 	Mutex sync.RWMutex
 }
 
+
 func NewDBStorage(connString string) *DBStorage {
 	return &DBStorage{
+
 		Metrics:  metrics.NewMetricStorage(),
 		Settings: struct{ DBConnString string }{DBConnString: connString},
 	}
+	if restore {
+		s.Restore()
+	}
+	return s
 }
 
 func (m *DBStorage) AddValue(metricType string, metricName string, f float64, i int64) {
