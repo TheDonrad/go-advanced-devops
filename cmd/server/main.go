@@ -26,7 +26,7 @@ func main() {
 
 	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
 
-	srvConfig := config.SrvConfig()
+	srvConfig := config.Config()
 	var h *handlers.APIHandler
 	if srvConfig.DBConnString != "" {
 		metStorage := dbstorage.NewDBStorage(srvConfig.DBConnString, srvConfig.Restore)
