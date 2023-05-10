@@ -21,9 +21,8 @@ type DBStorage struct {
 	Mutex sync.RWMutex
 }
 
-
-func NewDBStorage(connString string) *DBStorage {
-	return &DBStorage{
+func NewDBStorage(connString string, restore bool) *DBStorage {
+	s := &DBStorage{
 
 		Metrics:  metrics.NewMetricStorage(),
 		Settings: struct{ DBConnString string }{DBConnString: connString},
