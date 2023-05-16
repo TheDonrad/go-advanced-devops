@@ -39,6 +39,16 @@ goAdvancedTpl/cmd/agent/main.go:72.4,74.18 2 0
 goAdvancedTpl/cmd/agent/main.go:77.4,77.44 1 0
 goAdvancedTpl/cmd/agent/main.go:68.18,70.5 1 0
 goAdvancedTpl/cmd/agent/main.go:74.18,76.5 1 0
+goAdvancedTpl/cmd/server/main.go:25.13,31.34 4 0
+goAdvancedTpl/cmd/server/main.go:40.2,42.16 3 0
+goAdvancedTpl/cmd/server/main.go:31.34,35.3 2 0
+goAdvancedTpl/cmd/server/main.go:35.8,38.3 2 0
+goAdvancedTpl/cmd/server/main.go:42.16,44.3 1 0
+goAdvancedTpl/cmd/server/main.go:48.47,53.40 4 0
+goAdvancedTpl/cmd/server/main.go:57.2,58.39 2 0
+goAdvancedTpl/cmd/server/main.go:62.2,64.10 3 0
+goAdvancedTpl/cmd/server/main.go:53.40,56.3 2 0
+goAdvancedTpl/cmd/server/main.go:58.39,61.3 2 0
 goAdvancedTpl/internal/agent/collector/collector.go:20.32,24.2 3 1
 goAdvancedTpl/internal/agent/collector/collector.go:29.67,61.2 30 1
 goAdvancedTpl/internal/agent/collector/collector.go:64.52,66.16 2 1

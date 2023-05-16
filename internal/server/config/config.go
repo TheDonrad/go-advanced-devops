@@ -22,6 +22,7 @@ type SettingsList struct {
 	StoreInterval time.Duration // Период сохранения настроек
 	Restore       bool          // Восстанавливать метрики из хранилища при запуске
 	CryptoKey     string        // Ключ шифрования
+
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
