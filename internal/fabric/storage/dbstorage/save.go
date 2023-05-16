@@ -5,22 +5,22 @@ import (
 	"database/sql"
 	"log"
 
+	"goAdvancedTpl/internal/fabric/logs"
+
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 func (m *DBStorage) Save() error {
+	m.Mutex.RLock()
 	db, err := sql.Open("pgx",
 		m.Settings.DBConnString)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		if err = db.Close(); err != nil {
-			log.Print(err.Error())
-		}
-	}()
-	m.Mutex.RLock()
 	writeMetric(db, m)
+	if err = db.Close(); err != nil {
+		logs.New().Println(err.Error())
+	}
 	m.Mutex.RUnlock()
 	return nil
 }
@@ -31,6 +31,8 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 		ON CONFLICT (type, name) DO UPDATE
 		SET value = $3;`
 	var err error
+
+	ctx := context.Background()
 	tx, err := db.Begin()
 	if err != nil {
 		log.Println(err.Error())
@@ -42,7 +44,7 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 			log.Println(err.Error())
 		}
 	}()
-	ctx := context.Background()
+
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		log.Println(err.Error())
