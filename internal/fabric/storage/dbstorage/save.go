@@ -3,7 +3,6 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"goAdvancedTpl/internal/fabric/logs"
 
@@ -33,26 +32,31 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 	var err error
 
 	ctx := context.Background()
-	tx, err := db.Begin()
+	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
-		log.Println(err.Error())
+		logs.New().Println(err.Error())
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		log.Println(err.Error())
+		logs.New().Println(err.Error())
+		tx.Rollback()
 		return
 	}
 
 	for k, v := range m.Metrics.Gauge {
 		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
-			log.Println(err.Error())
+			logs.New().Println(err.Error())
+			tx.Rollback()
+			return
 		}
 	}
 	for k, v := range m.Metrics.Counter {
 		if _, err := stmt.ExecContext(ctx, "counter", k, v); err != nil {
-			log.Println(err.Error())
+			logs.New().Println(err.Error())
+			tx.Rollback()
+			return
 		}
 	}
 
