@@ -36,10 +36,6 @@ func Config(parseFlags bool) *SettingsList {
 		settings.setConfigFlags()
 	}
 
-	if parseFlags {
-		settings.setConfigFlags()
-	}
-
 	settings.setConfigEnv()
 	return &settings
 }
