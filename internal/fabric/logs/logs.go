@@ -14,10 +14,6 @@ var (
 
 // New возвращает объект для логирования
 func New() *log.Logger {
-	once.Do(
-		func() {
-			logger = log.New(&buf, "error: ", log.Lshortfile)
-		})
-	//buf.Reset()
+	logger = log.New(&buf, "error: ", log.Lshortfile)
 	return logger
 }
