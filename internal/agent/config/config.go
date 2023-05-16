@@ -12,16 +12,17 @@ import (
 
 // SettingsList хранит настройки агента по сбору метрик
 type SettingsList struct {
+	Key            string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
 	Addr           string        // Адрес для отправки метрик
+	RateLimit      int           // ограничение RPS
 	ReportInterval time.Duration // Период отправки
 	PollInterval   time.Duration // Период сбора
-	Key            string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
-	RateLimit      int           // ограничение RPS
+
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
 // У переменных окружения приоритет перед флагами
-func Config() *SettingsList {
+func Config(parseFlags bool) *SettingsList {
 
 	settings := SettingsList{
 		Addr:           "127.0.0.1:8080",
@@ -30,7 +31,9 @@ func Config() *SettingsList {
 		Key:            "",
 		RateLimit:      5,
 	}
-	settings.setConfigFlags()
+	if parseFlags {
+		settings.setConfigFlags()
+	}
 	settings.setConfigEnv()
 	return &settings
 }

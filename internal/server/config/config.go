@@ -16,11 +16,11 @@ import (
 // Иначе - файл
 type ServerConfig struct {
 	Addr          string        // Адрес для получения метрик
-	StoreInterval time.Duration // Период сохранения настроек
-	StoreFile     string        // Путь к файлу для хранения метрик
-	Restore       bool          // Восстанавливать метрики из хранилища при запуске
 	Key           string        // Ключ для отправки шифрованного хеша метрики по алгоритму sha256
 	DBConnString  string        // Строка соединения с БД
+	StoreFile     string        // Путь к файлу для хранения метрик
+	StoreInterval time.Duration // Период сохранения настроек
+	Restore       bool          // Восстанавливать метрики из хранилища при запуске
 }
 
 // SrvConfig возвращает настройки агента из переменных окружения или флагов запуска.
