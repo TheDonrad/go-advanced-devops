@@ -38,15 +38,8 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 	}
 
 	defer func() {
-		if err != nil {
+		if err = tx.Commit(); err != nil {
 			log.Println(err.Error())
-			if err = tx.Rollback(); err != nil {
-				log.Println(err.Error())
-			}
-		} else {
-			if err = tx.Commit(); err != nil {
-				log.Println(err.Error())
-			}
 		}
 	}()
 	ctx := context.Background()
