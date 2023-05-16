@@ -3,6 +3,7 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"goAdvancedTpl/internal/fabric/logs"
 
@@ -35,36 +36,48 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
 		logs.New().Println(err.Error())
+		fmt.Println(err.Error())
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		logs.New().Println(err.Error())
-		tx.Rollback()
+		fmt.Println(err.Error())
+		if err := tx.Rollback(); err != nil {
+			logs.New().Println(err.Error())
+		}
 		return
 	}
 
 	for k, v := range m.Metrics.Gauge {
 		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
 			logs.New().Println(err.Error())
-			tx.Rollback()
+			fmt.Println(err.Error())
+			if err := tx.Rollback(); err != nil {
+				logs.New().Println(err.Error())
+			}
 			return
 		}
 	}
 	for k, v := range m.Metrics.Counter {
 		if _, err := stmt.ExecContext(ctx, "counter", k, v); err != nil {
 			logs.New().Println(err.Error())
-			tx.Rollback()
+			fmt.Println(err.Error())
+			if err := tx.Rollback(); err != nil {
+				logs.New().Println(err.Error())
+			}
 			return
 		}
 	}
 
 	if err = stmt.Close(); err != nil {
+		fmt.Println(err.Error())
 		logs.New().Println(err.Error())
 	}
 
 	if err = tx.Commit(); err != nil {
+		fmt.Println(err.Error())
 		logs.New().Println(err.Error())
 	}
 
