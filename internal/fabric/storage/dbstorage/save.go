@@ -39,22 +39,11 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 		return
 	}
 
-	defer func() {
-		if err = tx.Commit(); err != nil {
-			log.Println(err.Error())
-		}
-	}()
-
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
 		log.Println(err.Error())
 		return
 	}
-	defer func() {
-		if err = stmt.Close(); err != nil {
-			log.Println(err.Error())
-		}
-	}()
 
 	for k, v := range m.Metrics.Gauge {
 		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
@@ -66,4 +55,13 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 			log.Println(err.Error())
 		}
 	}
+
+	if err = stmt.Close(); err != nil {
+		logs.New().Println(err.Error())
+	}
+
+	if err = tx.Commit(); err != nil {
+		logs.New().Println(err.Error())
+	}
+
 }
