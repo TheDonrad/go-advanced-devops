@@ -11,7 +11,7 @@ import (
 )
 
 func (m *DBStorage) Save() error {
-	m.Mutex.RLock()
+	m.Mutex.Lock()
 	db, err := sql.Open("pgx",
 		m.Settings.DBConnString)
 	if err != nil {
@@ -21,7 +21,7 @@ func (m *DBStorage) Save() error {
 	if err = db.Close(); err != nil {
 		logs.New().Println(err.Error())
 	}
-	m.Mutex.RUnlock()
+	m.Mutex.Unlock()
 	return nil
 }
 

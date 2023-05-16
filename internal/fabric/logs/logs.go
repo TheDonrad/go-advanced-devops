@@ -18,6 +18,6 @@ func New() *log.Logger {
 		func() {
 			logger = log.New(&buf, "error: ", log.Lshortfile)
 		})
-	buf.Reset()
+	//buf.Reset()
 	return logger
 }
