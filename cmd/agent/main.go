@@ -22,7 +22,7 @@ var (
 
 func main() {
 
-	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
+	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit) // Выведем сообщение с информацией о биллде
 
 	settings := config.Config(true)
 
