@@ -1,12 +1,16 @@
 package servermiddleware
 
 import (
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+
+	"goAdvancedTpl/internal/fabric/encryption"
+	"goAdvancedTpl/internal/fabric/logs"
 )
 
 type gzipWriter struct {
@@ -46,5 +50,40 @@ func GzipHandle(next http.Handler) http.Handler {
 		w.Header().Set("Content-Encoding", "gzip")
 		// передаём обработчику страницы переменную типа gzipWriter для вывода данных
 		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+	})
+}
+
+func Decryption(key string) func(next http.Handler) http.Handler {
+
+	decoder := Decoder{
+		Key: key,
+	}
+
+	return decoder.Handler
+}
+
+type Decoder struct {
+	Key string
+}
+
+func (d *Decoder) Handler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if d.Key == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			logs.New().Println(err.Error())
+			next.ServeHTTP(w, r)
+		}
+
+		if b, err := encryption.Decrypt(d.Key, body); err == nil {
+			r.Body = io.NopCloser(bytes.NewReader(b))
+		}
+
+		next.ServeHTTP(w, r)
+
 	})
 }

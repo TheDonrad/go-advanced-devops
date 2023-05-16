@@ -10,6 +10,7 @@ import (
 
 	"goAdvancedTpl/internal/agent/collector"
 	"goAdvancedTpl/internal/fabric/calchash"
+	"goAdvancedTpl/internal/fabric/encryption"
 
 	"golang.org/x/sync/errgroup"
 )
@@ -26,7 +27,7 @@ type Metric struct {
 type metricsMap []Metric
 
 // SendMetrics отправляет метрики на сервер
-func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit int) (err error) {
+func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit int, cryptoKey string) (err error) {
 
 	client := &http.Client{}
 	length := len(metrics.Gauge) + len(metrics.Counter)
@@ -63,7 +64,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit 
 			return err
 		}
 
-		if err = sendAllMetrics(addr, metricsToSend, client); err != nil {
+		if err = sendAllMetrics(addr, metricsToSend, client, cryptoKey); err != nil {
 			return err
 		}
 	} else {
@@ -82,7 +83,7 @@ func SendMetrics(addr string, metrics *collector.MetricsList, key string, limit 
 		}
 
 		g.Go(func() error {
-			lErr := sendAllMetrics(addr, metricsToSend, client)
+			lErr := sendAllMetrics(addr, metricsToSend, client, cryptoKey)
 			if lErr != nil {
 				return lErr
 			}
@@ -149,9 +150,17 @@ func sendJSON(addr string, met Metric, client *http.Client) error {
 	return nil
 }
 
-func sendAllMetrics(addr string, met metricsMap, client *http.Client) error {
+func sendAllMetrics(addr string, met metricsMap, client *http.Client, cryptoKey string) error {
 	endpoint := fmt.Sprintf("http://%s/updates/", addr)
 	b, _ := json.Marshal(met)
+
+	if cryptoKey != "" {
+		res, err := encryption.Encrypt(cryptoKey, b)
+		if err == nil {
+			b = res
+		}
+	}
+
 	request, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBufferString(string(b)))
 	if err != nil {
 		return err
