@@ -26,13 +26,13 @@ func privateKey(keyPath string) (*rsa.PrivateKey, error) {
 
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return nil, err
 	}
 
 	key, err := x509.ParsePKCS1PrivateKey(b)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return nil, err
 	}
 

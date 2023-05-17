@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"goAdvancedTpl/internal/fabric/logs"
+
 	"github.com/caarlos0/env/v6"
 )
 
@@ -71,7 +73,7 @@ func (settings *SettingsList) setConfigEnv() {
 
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 

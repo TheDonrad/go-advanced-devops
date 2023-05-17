@@ -14,7 +14,7 @@ func GenerateKeys(publicKeyPath string, privateKeyPath string) error {
 
 	privateKey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 	err = writePublicKey(publicKeyPath, &privateKey.PublicKey)
@@ -34,7 +34,7 @@ func GenerateKeys(publicKeyPath string, privateKeyPath string) error {
 func writePublicKey(filePath string, key *rsa.PublicKey) error {
 	pubPKI, err := x509.MarshalPKIXPublicKey(key)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return err
 	}
 
@@ -44,7 +44,7 @@ func writePublicKey(filePath string, key *rsa.PublicKey) error {
 	})
 
 	if err = os.WriteFile(filePath, pubEncoded, 0666); err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return err
 	}
 
@@ -60,7 +60,7 @@ func writePrivateKey(filePath string, key *rsa.PrivateKey) error {
 	)
 
 	if err := os.WriteFile(filePath, privateEncoded, 0666); err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return err
 	}
 

@@ -11,8 +11,8 @@ var (
 	once   *sync.Once
 )
 
-// New возвращает объект для логирования
-func New() *log.Logger {
+// Logger возвращает объект для логирования
+func Logger() *log.Logger {
 	once.Do(func() {
 		logger = log.New(os.Stdout, "error: ", log.Lshortfile)
 	})

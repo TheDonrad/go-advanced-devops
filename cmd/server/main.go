@@ -2,9 +2,9 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
+	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
@@ -41,7 +41,7 @@ func main() {
 	r := routers(h, srvConfig.CryptoKey)
 	err := http.ListenAndServe(srvConfig.Addr, r)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 }

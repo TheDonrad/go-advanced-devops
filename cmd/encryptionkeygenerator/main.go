@@ -19,12 +19,12 @@ func main() {
 	flag.Parse()
 
 	if publicKeyPath == "" || privateKeyPath == "" {
-		logs.New().Println("flags \"public-key\" and \"private-key\" must be filled")
+		logs.Logger().Println("flags \"public-key\" and \"private-key\" must be filled")
 		return
 	}
 
 	if err := encryption.GenerateKeys(publicKeyPath, privateKeyPath); err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 

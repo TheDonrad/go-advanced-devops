@@ -2,7 +2,6 @@
 package main
 
 import (
-
 	"runtime"
 	"sync"
 	"sync/atomic"
@@ -67,13 +66,13 @@ func main() {
 
 			err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit, settings.CryptoKey)
 			if err != nil {
-				logs.New().Println(err.Error())
+				logs.Logger().Println(err.Error())
 			}
 
 			metrics.SetMetricsToZero()
 
 			if err != nil {
-				logs.New().Println(err.Error())
+				logs.Logger().Println(err.Error())
 			}
 			atomic.StoreInt32(&sendingInProgress, 0)
 		}

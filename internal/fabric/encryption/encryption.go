@@ -27,20 +27,20 @@ func publicKey(keyPath string) (*rsa.PublicKey, error) {
 
 	b, err := os.ReadFile(keyPath)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return nil, err
 	}
 
 	key, err := x509.ParsePKIXPublicKey(b)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return nil, err
 	}
 
 	pub, ok := key.(*rsa.PublicKey)
 	if !ok {
 		err = errors.New("cannot cast type")
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return nil, err
 	}
 

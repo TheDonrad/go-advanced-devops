@@ -3,7 +3,6 @@ package dbstorage
 import (
 	"context"
 	"database/sql"
-	"log"
 
 	"goAdvancedTpl/internal/fabric/logs"
 
@@ -17,11 +16,11 @@ func (m *DBStorage) Save() error {
 	if err != nil {
 		return err
 	}
-	m.Mutex.RLock()
+	m.Mutex.Lock()
 	writeMetric(db, m)
-	m.Mutex.RUnlock()
+	m.Mutex.Unlock()
 	if err = db.Close(); err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 	return nil
@@ -37,44 +36,56 @@ func writeMetric(db *sql.DB, m *DBStorage) {
 	ctx := context.Background()
 	tx, err := db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 
 	stmt, err := tx.PrepareContext(ctx, query)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 		if err := tx.Rollback(); err != nil {
-			log.Println(err.Error())
+			logs.Logger().Println(err.Error())
 		}
 		return
 	}
 
 	for k, v := range m.Metrics.Gauge {
 		if _, err = stmt.ExecContext(ctx, "gauge", k, v); err != nil {
-			log.Println(err.Error())
-			if err := tx.Rollback(); err != nil {
-				log.Println(err.Error())
+			logs.Logger().Println(err.Error())
+
+			if err = stmt.Close(); err != nil {
+				logs.Logger().Println(err.Error())
 			}
+
+			if err := tx.Rollback(); err != nil {
+				logs.Logger().Println(err.Error())
+			}
+
 			return
 		}
 	}
 	for k, v := range m.Metrics.Counter {
 		if _, err := stmt.ExecContext(ctx, "counter", k, v); err != nil {
-			log.Println(err.Error())
-			if err := tx.Rollback(); err != nil {
-				log.Println(err.Error())
+			logs.Logger().Println(err.Error())
+
+			if err = stmt.Close(); err != nil {
+				logs.Logger().Println(err.Error())
 			}
+
+			if err := tx.Rollback(); err != nil {
+				logs.Logger().Println(err.Error())
+			}
+
 			return
 		}
 	}
 
 	if err = stmt.Close(); err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 	if err = tx.Commit(); err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 }

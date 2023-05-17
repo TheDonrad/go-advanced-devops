@@ -75,7 +75,7 @@ func (d *Decoder) Handler(next http.Handler) http.Handler {
 
 		body, err := io.ReadAll(r.Body)
 		if err != nil {
-			logs.New().Println(err.Error())
+			logs.Logger().Println(err.Error())
 			next.ServeHTTP(w, r)
 		}
 
