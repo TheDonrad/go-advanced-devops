@@ -17,9 +17,9 @@ func (m *DBStorage) Save() error {
 	if err != nil {
 		return err
 	}
-	m.Mutex.Lock()
+	m.Mutex.RLock()
 	writeMetric(db, m)
-	m.Mutex.Unlock()
+	m.Mutex.RUnlock()
 	if err = db.Close(); err != nil {
 		logs.New().Println(err.Error())
 	}
