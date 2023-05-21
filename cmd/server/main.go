@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -49,10 +48,12 @@ func main() {
 
 	idleConnClosed := make(chan struct{})
 	sigint := make(chan os.Signal, 1)
-	signal.Notify(sigint, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
+	signal.Notify(sigint, syscall.SIGTERM)
 	go func() {
 		<-sigint
-		if err := server.Shutdown(context.Background()); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
 			logs.Logger().Printf("HTTP server Shutdown: %v", err)
 		}
 		close(idleConnClosed)
@@ -64,8 +65,7 @@ func main() {
 	}
 
 	<-idleConnClosed
-	log.Println("Closing DB connections, saving data")
-	time.Sleep(3 * time.Second)
+	time.Sleep(12 * time.Second)
 }
 
 func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {

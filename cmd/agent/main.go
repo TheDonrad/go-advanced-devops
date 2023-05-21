@@ -76,27 +76,29 @@ func main() {
 
 	wg.Add(1)
 	go func() {
-
+	Loop:
 		for {
-			time.Sleep(settings.PollInterval)
-			atomic.StoreInt32(&sendingInProgress, 1)
-			metrics.CalculateMetrics()
+			select {
+			case <-idleConnClosed:
+				wg.Done()
+				break Loop
+			default:
+				time.Sleep(settings.PollInterval)
+				atomic.StoreInt32(&sendingInProgress, 1)
+				metrics.CalculateMetrics()
 
-			err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit, settings.CryptoKey)
-			if err != nil {
-				logs.Logger().Println(err.Error())
+				err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit, settings.CryptoKey)
+				if err != nil {
+					logs.Logger().Println(err.Error())
+				}
+
+				metrics.SetMetricsToZero()
+
+				if err != nil {
+					logs.Logger().Println(err.Error())
+				}
+				atomic.StoreInt32(&sendingInProgress, 0)
 			}
-
-			metrics.SetMetricsToZero()
-
-			if err != nil {
-				logs.Logger().Println(err.Error())
-			}
-			atomic.StoreInt32(&sendingInProgress, 0)
-
-			<-idleConnClosed
-			wg.Done()
-			break
 		}
 	}()
 
