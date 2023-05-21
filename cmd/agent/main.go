@@ -2,9 +2,12 @@
 package main
 
 import (
+	"os"
+	"os/signal"
 	"runtime"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 
 	"goAdvancedTpl/internal/agent/collector"
@@ -26,6 +29,14 @@ func main() {
 
 	settings := config.Config(true)
 
+	idleConnClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
+	go func() {
+		<-sigint
+		close(idleConnClosed)
+	}()
+
 	metrics := collector.NewMetrics()
 	var memStats runtime.MemStats
 	wg := &sync.WaitGroup{}
@@ -40,6 +51,9 @@ func main() {
 			metrics.SetMetrics(memStats)
 			time.Sleep(settings.ReportInterval)
 
+			<-idleConnClosed
+			wg.Done()
+			break
 		}
 	}()
 
@@ -53,6 +67,10 @@ func main() {
 
 			metrics.SetAdditionalMetrics()
 			time.Sleep(settings.ReportInterval)
+
+			<-idleConnClosed
+			wg.Done()
+			break
 		}
 	}()
 
@@ -75,6 +93,10 @@ func main() {
 				logs.Logger().Println(err.Error())
 			}
 			atomic.StoreInt32(&sendingInProgress, 0)
+
+			<-idleConnClosed
+			wg.Done()
+			break
 		}
 	}()
 

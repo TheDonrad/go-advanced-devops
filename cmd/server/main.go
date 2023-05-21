@@ -2,7 +2,13 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
@@ -39,11 +45,27 @@ func main() {
 	}
 
 	r := routers(h, srvConfig.CryptoKey)
-	err := http.ListenAndServe(srvConfig.Addr, r)
+	server := http.Server{Addr: srvConfig.Addr, Handler: r}
+
+	idleConnClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
+	go func() {
+		<-sigint
+		if err := server.Shutdown(context.Background()); err != nil {
+			logs.Logger().Printf("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnClosed)
+	}()
+
+	err := server.ListenAndServe()
 	if err != nil {
 		logs.Logger().Println(err.Error())
 	}
 
+	<-idleConnClosed
+	log.Println("Closing DB connections, saving data")
+	time.Sleep(3 * time.Second)
 }
 
 func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {
