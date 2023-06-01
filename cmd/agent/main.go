@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
 	"runtime"
@@ -28,13 +29,14 @@ func main() {
 	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
 
 	settings := config.Config(true)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	idleConnClosed := make(chan struct{})
 	sigint := make(chan os.Signal, 1)
 	signal.Notify(sigint, os.Interrupt, syscall.SIGQUIT, syscall.SIGTERM)
 	go func() {
 		<-sigint
-		close(idleConnClosed)
+		cancel()
 	}()
 
 	metrics := collector.NewMetrics()
@@ -42,47 +44,56 @@ func main() {
 	wg := &sync.WaitGroup{}
 	var sendingInProgress int32
 	wg.Add(1)
+
 	go func() {
 		for {
-			if atomic.LoadInt32(&sendingInProgress) == 1 {
-				time.Sleep(time.Second)
-				continue
-			}
-			metrics.SetMetrics(memStats)
-			time.Sleep(settings.ReportInterval)
+			select {
+			case <-ctx.Done():
+				wg.Done()
+				return
+			default:
+				if atomic.LoadInt32(&sendingInProgress) == 1 {
+					time.Sleep(time.Second)
+					continue
+				}
+				metrics.SetMetrics(memStats)
+				time.Sleep(settings.ReportInterval)
 
-			<-idleConnClosed
-			wg.Done()
-			break
+			}
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
 		for {
-			if atomic.LoadInt32(&sendingInProgress) == 1 {
-				time.Sleep(time.Second)
-				continue
+			select {
+			case <-ctx.Done():
+				wg.Done()
+				return
+			default:
+				if atomic.LoadInt32(&sendingInProgress) == 1 {
+					time.Sleep(time.Second)
+					continue
+				}
+
+				metrics.SetAdditionalMetrics()
+				time.Sleep(settings.ReportInterval)
+
 			}
-
-			metrics.SetAdditionalMetrics()
-			time.Sleep(settings.ReportInterval)
-
-			<-idleConnClosed
-			wg.Done()
-			break
 		}
 	}()
 
 	wg.Add(1)
 	go func() {
+		ticker := time.NewTicker(settings.PollInterval)
 	Loop:
 		for {
 			select {
-			case <-idleConnClosed:
+			case <-ctx.Done():
+				ticker.Stop()
 				wg.Done()
 				break Loop
-			default:
+			case <-ticker.C:
 				time.Sleep(settings.PollInterval)
 				atomic.StoreInt32(&sendingInProgress, 1)
 				metrics.CalculateMetrics()
