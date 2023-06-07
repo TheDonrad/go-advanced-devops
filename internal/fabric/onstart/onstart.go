@@ -32,6 +32,6 @@ func WriteMessage(buildVersion string, buildDate string, buildCommit string) {
 
 func printMessage(message string) {
 	if _, err := io.WriteString(os.Stdout, message); err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 }

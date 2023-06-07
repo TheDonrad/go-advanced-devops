@@ -2,7 +2,8 @@ package dbstorage
 
 import (
 	"context"
-	"log"
+
+	"goAdvancedTpl/internal/fabric/logs"
 
 	"github.com/jackc/pgx/v5"
 )
@@ -10,19 +11,19 @@ import (
 func (m *DBStorage) Restore() {
 	conn, err := pgx.Connect(context.Background(), m.Settings.DBConnString)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 	defer func() {
 		if err = conn.Close(context.Background()); err != nil {
-			log.Print(err.Error())
+			logs.Logger().Print(err.Error())
 		}
 	}()
 
 	rows, err := conn.Query(context.Background(), "SELECT name, type, value FROM metrics")
 	if err != nil {
 		createTable(conn)
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 	defer rows.Close()
 
@@ -36,7 +37,7 @@ func (m *DBStorage) Restore() {
 		var r met
 		err = rows.Scan(&r.Name, &r.MetType, &r.Value)
 		if err != nil {
-			log.Println(err)
+			logs.Logger().Println(err)
 			return
 		}
 		switch r.MetType {
@@ -59,7 +60,7 @@ func createTable(conn *pgx.Conn) {
 			)`
 
 	if _, err := conn.Exec(context.Background(), query); err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 }

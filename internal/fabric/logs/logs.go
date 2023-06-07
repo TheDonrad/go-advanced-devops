@@ -1,23 +1,16 @@
 package logs
 
 import (
-	"bytes"
 	"log"
-	"sync"
+	"os"
 )
 
 var (
 	logger *log.Logger
-	buf    bytes.Buffer
-	once   sync.Once
 )
 
-// New возвращает объект для логирования
-func New() *log.Logger {
-	once.Do(
-		func() {
-			logger = log.New(&buf, "error: ", log.Lshortfile)
-		})
-	buf.Reset()
+// Logger возвращает объект для логирования
+func Logger() *log.Logger {
+	logger = log.New(os.Stdout, "error: ", log.Lshortfile)
 	return logger
 }

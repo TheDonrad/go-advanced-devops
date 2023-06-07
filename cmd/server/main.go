@@ -2,9 +2,9 @@
 package main
 
 import (
-	"log"
 	"net/http"
 
+	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
@@ -26,7 +26,8 @@ func main() {
 
 	onstart.WriteMessage(BuildVersion, BuildDate, BuildCommit)
 
-	srvConfig := config.SrvConfig()
+	srvConfig := config.Config()
+
 	var h *handlers.APIHandler
 	if srvConfig.DBConnString != "" {
 		metStorage := dbstorage.NewDBStorage(srvConfig.DBConnString, srvConfig.Restore)
@@ -37,19 +38,20 @@ func main() {
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
 	}
 
-	r := routers(h)
+	r := routers(h, srvConfig.CryptoKey)
 	err := http.ListenAndServe(srvConfig.Addr, r)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 	}
 
 }
 
-func routers(h *handlers.APIHandler) *chi.Mux {
+func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)
+	r.Use(servermiddleware.Decryption(cryptoKey))
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/", h.WriteWholeMetric)
 		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)

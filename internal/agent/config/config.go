@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"goAdvancedTpl/internal/fabric/logs"
+
 	"github.com/caarlos0/env/v6"
 )
 
@@ -17,7 +19,7 @@ type SettingsList struct {
 	RateLimit      int           // ограничение RPS
 	ReportInterval time.Duration // Период отправки
 	PollInterval   time.Duration // Период сбора
-
+	CryptoKey      string        // Ключ шифрования
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
@@ -30,10 +32,12 @@ func Config(parseFlags bool) *SettingsList {
 		ReportInterval: 5 * time.Second,
 		Key:            "",
 		RateLimit:      5,
+		CryptoKey:      "",
 	}
 	if parseFlags {
 		settings.setConfigFlags()
 	}
+
 	settings.setConfigEnv()
 	return &settings
 }
@@ -51,6 +55,7 @@ func (settings *SettingsList) setConfigFlags() {
 	})
 	flag.StringVar(&settings.Key, "k", settings.Key, "hash key")
 	flag.IntVar(&settings.RateLimit, "l", settings.RateLimit, "rate limit")
+	flag.StringVar(&settings.CryptoKey, "crypto-key", settings.CryptoKey, "crypto-key")
 
 	flag.Parse()
 }
@@ -63,11 +68,12 @@ func (settings *SettingsList) setConfigEnv() {
 		PollInterval   string `env:"POLL_INTERVAL"`
 		Key            string `env:"KEY"`
 		RateLimit      int    `env:"RATE_LIMIT"`
+		CryptoKey      string `env:"CRYPTO_KEY"`
 	}
 
 	err := env.Parse(&cfg)
 	if err != nil {
-		log.Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 
@@ -98,4 +104,9 @@ func (settings *SettingsList) setConfigEnv() {
 	if cfg.RateLimit > 0 {
 		settings.RateLimit = cfg.RateLimit
 	}
+
+	if len(strings.TrimSpace(cfg.CryptoKey)) != 0 {
+		settings.CryptoKey = cfg.CryptoKey
+	}
+
 }
