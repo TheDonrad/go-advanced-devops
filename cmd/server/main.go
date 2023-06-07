@@ -2,7 +2,12 @@
 package main
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
@@ -39,11 +44,28 @@ func main() {
 	}
 
 	r := routers(h, srvConfig.CryptoKey)
-	err := http.ListenAndServe(srvConfig.Addr, r)
+	server := http.Server{Addr: srvConfig.Addr, Handler: r}
+
+	idleConnClosed := make(chan struct{})
+	sigint := make(chan os.Signal, 1)
+	signal.Notify(sigint, syscall.SIGTERM)
+	go func() {
+		<-sigint
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			logs.Logger().Printf("HTTP server Shutdown: %v", err)
+		}
+		close(idleConnClosed)
+	}()
+
+	err := server.ListenAndServe()
 	if err != nil {
 		logs.Logger().Println(err.Error())
 	}
 
+	<-idleConnClosed
+	time.Sleep(12 * time.Second)
 }
 
 func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {

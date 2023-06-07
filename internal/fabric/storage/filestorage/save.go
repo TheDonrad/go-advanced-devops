@@ -21,9 +21,9 @@ func (m *FileStorage) Save() error {
 			log.Print(err.Error())
 		}
 	}()
-	m.Mutex.RLock()
+	m.Mutex.Lock()
 	err = producer.writeEvent(&m.Metrics)
-	m.Mutex.RUnlock()
+	m.Mutex.Unlock()
 	return err
 }
 
