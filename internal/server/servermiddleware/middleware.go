@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strings"
 
@@ -81,6 +82,44 @@ func (d *Decoder) Handler(next http.Handler) http.Handler {
 
 		if b, err := encryption.Decrypt(d.Key, body); err == nil {
 			r.Body = io.NopCloser(bytes.NewReader(b))
+		}
+
+		next.ServeHTTP(w, r)
+
+	})
+}
+
+func CheckIP(trustedSubnet string) func(next http.Handler) http.Handler {
+
+	ipChecker := ipChecker{
+		trustedSubnet: trustedSubnet,
+	}
+
+	return ipChecker.Handler
+}
+
+type ipChecker struct {
+	trustedSubnet string
+}
+
+func (i *ipChecker) Handler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if i.trustedSubnet == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		_, ipNet, err := net.ParseCIDR(i.trustedSubnet)
+		if err != nil {
+			logs.Logger().Println(err.Error())
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		ip := net.ParseIP(r.Header.Get("X-Real-IP"))
+		if ip == nil || ipNet.Contains(ip) {
+			w.WriteHeader(http.StatusForbidden)
+			return
 		}
 
 		next.ServeHTTP(w, r)

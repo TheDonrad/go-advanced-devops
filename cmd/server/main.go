@@ -43,7 +43,7 @@ func main() {
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
 	}
 
-	r := routers(h, srvConfig.CryptoKey)
+	r := routers(h, srvConfig.CryptoKey, srvConfig.TrustedSubnet)
 	server := http.Server{Addr: srvConfig.Addr, Handler: r}
 
 	idleConnClosed := make(chan struct{})
@@ -68,12 +68,15 @@ func main() {
 	time.Sleep(12 * time.Second)
 }
 
-func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {
+func routers(h *handlers.APIHandler, cryptoKey string, trustedSubnet string) *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)
 	r.Use(servermiddleware.Decryption(cryptoKey))
+	if trustedSubnet != "" {
+		r.Use(servermiddleware.CheckIP(trustedSubnet))
+	}
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/", h.WriteWholeMetric)
 		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)

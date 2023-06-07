@@ -26,6 +26,7 @@ type SettingsList struct {
 	StoreInterval time.Duration // Период сохранения настроек
 	Restore       bool          // Восстанавливать метрики из хранилища при запуске
 	CryptoKey     string        // Ключ шифрования
+	TrustedSubnet string        // Доверенная подсеть
 	configFile    string        // Файл с настройками
 }
 
@@ -69,6 +70,7 @@ func (settings *SettingsList) setConfigFlags() {
 
 	flag.StringVar(&settings.configFile, "c", settings.configFile, "config")
 	flag.StringVar(&settings.configFile, "config", settings.configFile, "config")
+	flag.StringVar(&settings.TrustedSubnet, "t", settings.configFile, "trusted subnet")
 
 	flag.Parse()
 
@@ -84,6 +86,7 @@ func (settings *SettingsList) setConfigEnv() {
 		DBConnString  string `env:"DATABASE_DSN"`
 		CryptoKey     string `env:"CRYPTO_KEY"`
 		Config        string `env:"CONFIG"`
+		TrustedSubnet string `env:"TRUSTED_SUBNET"`
 	}
 
 	err := env.Parse(&cfg)
@@ -128,6 +131,10 @@ func (settings *SettingsList) setConfigEnv() {
 		settings.configFile = cfg.Config
 	}
 
+	if len(strings.TrimSpace(cfg.TrustedSubnet)) != 0 {
+		settings.TrustedSubnet = cfg.TrustedSubnet
+	}
+
 }
 
 func (settings *SettingsList) setUnspecified() {
@@ -161,6 +168,7 @@ func (settings *SettingsList) setConfigFile() {
 		StoreFile     string `json:"store_file"`
 		DBConnString  string `json:"database_dsn"`
 		CryptoKey     string `json:"crypto_key"`
+		TrustedSubnet string `json:"trusted_subnet"`
 	}
 
 	if err = json.Unmarshal(file, &cfg); err != nil {
@@ -193,6 +201,10 @@ func (settings *SettingsList) setConfigFile() {
 
 	if settings.CryptoKey == "" {
 		settings.CryptoKey = cfg.CryptoKey
+	}
+
+	if settings.TrustedSubnet == "" {
+		settings.TrustedSubnet = cfg.TrustedSubnet
 	}
 
 }
