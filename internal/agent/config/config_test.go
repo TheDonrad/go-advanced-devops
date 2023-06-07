@@ -46,20 +46,12 @@ func TestSettingsList_setConfigEnv(t *testing.T) {
 		RateLimit:      5,
 	}
 
-	os.Setenv("ADDRESS", "localhost:123")
-	defer os.Unsetenv("ADDRESS")
-
-	os.Setenv("REPORT_INTERVAL", "60s")
-	defer os.Unsetenv("REPORT_INTERVAL")
-
-	os.Setenv("POLL_INTERVAL", "20s")
-	defer os.Unsetenv("POLL_INTERVAL")
-
-	os.Setenv("KEY", "hash")
-	defer os.Unsetenv("Key")
-
-	os.Setenv("RATE_LIMIT", "10")
-	defer os.Unsetenv("RateLimit")
+	_ = os.Setenv("ADDRESS", "localhost:123")
+	_ = os.Setenv("REPORT_INTERVAL", "60s")
+	_ = os.Setenv("POLL_INTERVAL", "20s")
+	_ = os.Setenv("KEY", "hash")
+	_ = os.Setenv("RATE_LIMIT", "10")
+	defer os.Clearenv()
 
 	settings.setConfigEnv()
 
@@ -86,20 +78,12 @@ func TestConfig(t *testing.T) {
 		Key:            "",
 		RateLimit:      5,
 	}
-	os.Setenv("ADDRESS", "")
-	defer os.Unsetenv("ADDRESS")
-
-	os.Setenv("REPORT_INTERVAL", "")
-	defer os.Unsetenv("REPORT_INTERVAL")
-
-	os.Setenv("POLL_INTERVAL", "")
-	defer os.Unsetenv("POLL_INTERVAL")
-
-	os.Setenv("KEY", "")
-	defer os.Unsetenv("Key")
-
-	os.Setenv("RATE_LIMIT", "")
-	defer os.Unsetenv("RateLimit")
+	_ = os.Setenv("ADDRESS", "")
+	_ = os.Setenv("REPORT_INTERVAL", "")
+	_ = os.Setenv("POLL_INTERVAL", "")
+	_ = os.Setenv("KEY", "")
+	_ = os.Setenv("RATE_LIMIT", "")
+	defer os.Clearenv()
 
 	t.Run("config test", func(t *testing.T) {
 		if got := Config(false); !reflect.DeepEqual(got, &want) {
