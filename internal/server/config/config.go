@@ -2,11 +2,15 @@
 package config
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"goAdvancedTpl/internal/fabric/logs"
 
 	"github.com/caarlos0/env/v6"
 )
@@ -22,24 +26,27 @@ type SettingsList struct {
 	StoreInterval time.Duration // Период сохранения настроек
 	Restore       bool          // Восстанавливать метрики из хранилища при запуске
 	CryptoKey     string        // Ключ шифрования
-
+	configFile    string        // Файл с настройками
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
 // У переменных окружения приоритет перед флагами
 func Config() *SettingsList {
-	settings := SettingsList{
-		Addr:          "127.0.0.1:8080",
-		StoreInterval: 120 * time.Second,
-		StoreFile:     "/tmp/devops-metrics-db.json",
-		Restore:       true,
-		DBConnString:  "",
-		CryptoKey:     "",
-	}
+
+	settings := SettingsList{}
+
 	settings.setConfigFlags()
+
+	if settings.configFile != "" {
+		settings.setConfigFile()
+	}
+
 	settings.setConfigEnv()
 
+	settings.setUnspecified()
+
 	return &settings
+
 }
 
 func (settings *SettingsList) setConfigFlags() {
@@ -60,6 +67,9 @@ func (settings *SettingsList) setConfigFlags() {
 
 	flag.StringVar(&settings.CryptoKey, "crypto-key", settings.CryptoKey, "crypto-key")
 
+	flag.StringVar(&settings.configFile, "c", settings.configFile, "config")
+	flag.StringVar(&settings.configFile, "config", settings.configFile, "config")
+
 	flag.Parse()
 
 }
@@ -73,6 +83,7 @@ func (settings *SettingsList) setConfigEnv() {
 		Key           string `env:"KEY"`
 		DBConnString  string `env:"DATABASE_DSN"`
 		CryptoKey     string `env:"CRYPTO_KEY"`
+		Config        string `env:"CONFIG"`
 	}
 
 	err := env.Parse(&cfg)
@@ -110,6 +121,77 @@ func (settings *SettingsList) setConfigEnv() {
 	}
 
 	if len(strings.TrimSpace(cfg.CryptoKey)) != 0 {
+		settings.CryptoKey = cfg.CryptoKey
+	}
+
+	if len(strings.TrimSpace(cfg.Config)) != 0 {
+		settings.configFile = cfg.Config
+	}
+
+}
+
+func (settings *SettingsList) setUnspecified() {
+
+	if settings.Addr == "" {
+		settings.Addr = "127.0.0.1:8080"
+	}
+
+	if settings.StoreInterval == 0 {
+		settings.StoreInterval = 120 * time.Second
+	}
+
+	if settings.StoreFile == "" {
+		settings.StoreFile = "/tmp/devops-metrics-db.json"
+	}
+
+}
+
+func (settings *SettingsList) setConfigFile() {
+
+	file, err := os.ReadFile(settings.configFile)
+	if err != nil {
+		logs.Logger().Println(err.Error())
+		return
+	}
+
+	var cfg struct {
+		Addr          string `json:"address"`
+		Restore       bool   `json:"restore"`
+		StoreInterval string `json:"store_interval"`
+		StoreFile     string `json:"store_file"`
+		DBConnString  string `json:"database_dsn"`
+		CryptoKey     string `json:"crypto_key"`
+	}
+
+	if err = json.Unmarshal(file, &cfg); err != nil {
+		logs.Logger().Println(err.Error())
+		return
+	}
+
+	if settings.Addr == "" {
+		settings.Addr = cfg.Addr
+	}
+
+	if !settings.Restore {
+		settings.Restore = cfg.Restore
+	}
+
+	if settings.StoreInterval == 0 {
+		settings.StoreInterval, err = time.ParseDuration(cfg.StoreInterval)
+		if err != nil {
+			logs.Logger().Println(err.Error())
+		}
+	}
+
+	if settings.StoreFile == "" {
+		settings.StoreFile = cfg.StoreFile
+	}
+
+	if settings.DBConnString == "" {
+		settings.DBConnString = cfg.DBConnString
+	}
+
+	if settings.CryptoKey == "" {
 		settings.CryptoKey = cfg.CryptoKey
 	}
 

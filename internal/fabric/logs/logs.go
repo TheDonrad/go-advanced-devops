@@ -11,6 +11,9 @@ var (
 
 // Logger возвращает объект для логирования
 func Logger() *log.Logger {
-	logger = log.New(os.Stdout, "error: ", log.Lshortfile)
 	return logger
+}
+
+func init() {
+	logger = log.New(os.Stdout, "error: ", log.Lshortfile)
 }
