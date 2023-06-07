@@ -3,11 +3,11 @@ package dbstorage
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
 
+	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/metrics"
 
 	"github.com/jackc/pgx/v5"
@@ -60,7 +60,7 @@ func (m *DBStorage) Ping() (err error) {
 
 	defer func() {
 		if err = conn.Close(context.Background()); err != nil {
-			log.Print(err)
+			logs.Logger().Print(err)
 		}
 	}()
 

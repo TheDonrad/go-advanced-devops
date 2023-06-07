@@ -2,12 +2,12 @@ package main
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
+	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/handlers"
 
@@ -57,7 +57,7 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string) (int, s
 	defer func() {
 		err = resp.Body.Close()
 		if err != nil {
-			log.Println(err.Error())
+			logs.Logger().Println(err.Error())
 		}
 	}()
 

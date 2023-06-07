@@ -64,14 +64,14 @@ func (metrics *MetricsList) SetMetrics(memStats runtime.MemStats) {
 func (metrics *MetricsList) SetAdditionalMetrics() {
 	v, err := mem.VirtualMemory()
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 	metrics.Gauge["TotalMemory"] = float64(v.Total) + 1
 	metrics.Gauge["FreeMemory"] = float64(v.Free) + 1
 	c, err := cpu.PercentWithContext(context.Background(), 0, false)
 	if err != nil {
-		logs.New().Println(err.Error())
+		logs.Logger().Println(err.Error())
 		return
 	}
 	metrics.Gauge["CPUutilization1"] = c[0] + rand.Float64()

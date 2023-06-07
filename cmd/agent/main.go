@@ -64,15 +64,15 @@ func main() {
 			atomic.StoreInt32(&sendingInProgress, 1)
 			metrics.CalculateMetrics()
 
-			err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit)
+			err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit, settings.CryptoKey)
 			if err != nil {
-				logs.New().Println(err.Error())
+				logs.Logger().Println(err.Error())
 			}
 
 			metrics.SetMetricsToZero()
 
 			if err != nil {
-				logs.New().Println(err.Error())
+				logs.Logger().Println(err.Error())
 			}
 			atomic.StoreInt32(&sendingInProgress, 0)
 		}
