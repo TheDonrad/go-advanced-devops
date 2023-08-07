@@ -1,8 +1,9 @@
-// сервис для хранения метрик ОС и получения их значений
+// Сервис для хранения метрик ОС и получения их значений
 package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,14 +12,17 @@ import (
 
 	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
+	"goAdvancedTpl/internal/fabric/proto"
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/config"
+	"goAdvancedTpl/internal/server/grpcserver"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/servermiddleware"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -33,14 +37,17 @@ func main() {
 
 	srvConfig := config.Config()
 
+	s := grpc.NewServer()
 	var h *handlers.APIHandler
+
 	if srvConfig.DBConnString != "" {
 		metStorage := dbstorage.NewDBStorage(srvConfig.DBConnString, srvConfig.Restore)
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
-
+		proto.RegisterMetricsServer(s, grpcserver.NewServer(metStorage, srvConfig.Key))
 	} else {
 		metStorage := filestorage.NewFileStorage(srvConfig.StoreInterval, srvConfig.StoreFile, srvConfig.Restore)
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
+		proto.RegisterMetricsServer(s, grpcserver.NewServer(metStorage, srvConfig.Key))
 	}
 
 	r := routers(h, srvConfig.CryptoKey, srvConfig.TrustedSubnet)
@@ -61,6 +68,15 @@ func main() {
 
 	err := server.ListenAndServe()
 	if err != nil {
+		logs.Logger().Println(err.Error())
+	}
+
+	listen, err := net.Listen("tcp", srvConfig.GRPCAddr)
+	if err != nil {
+		logs.Logger().Println(err.Error())
+	}
+
+	if err = s.Serve(listen); err != nil {
 		logs.Logger().Println(err.Error())
 	}
 

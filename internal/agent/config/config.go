@@ -23,6 +23,7 @@ type SettingsList struct {
 	PollInterval   time.Duration // Период сбора
 	CryptoKey      string        // Ключ шифрования
 	configFile     string        // Файл с настройками
+	UseGRPC        bool          // Использовать gRPC для отправки метрик
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
@@ -63,6 +64,7 @@ func (settings *SettingsList) setConfigFlags() {
 
 	flag.StringVar(&settings.configFile, "c", settings.configFile, "config")
 	flag.StringVar(&settings.configFile, "config", settings.configFile, "config")
+	flag.BoolVar(&settings.UseGRPC, "g", settings.UseGRPC, "gRPC")
 
 	flag.Parse()
 }
@@ -77,6 +79,7 @@ func (settings *SettingsList) setConfigEnv() {
 		RateLimit      int    `env:"RATE_LIMIT"`
 		CryptoKey      string `env:"CRYPTO_KEY"`
 		Config         string `env:"CONFIG"`
+		GRPC           bool   `env:"GRPC"`
 	}
 
 	err := env.Parse(&cfg)
@@ -120,7 +123,7 @@ func (settings *SettingsList) setConfigEnv() {
 	if len(strings.TrimSpace(cfg.Config)) != 0 {
 		settings.configFile = cfg.Config
 	}
-
+	settings.UseGRPC = cfg.GRPC
 }
 
 func (settings *SettingsList) setUnspecified() {
@@ -156,6 +159,7 @@ func (settings *SettingsList) setConfigFile() {
 		ReportInterval string `json:"report_interval"`
 		PollInterval   string `json:"poll_interval"`
 		CryptoKey      string `json:"crypto_key"`
+		GRPC           bool   `json:"gRPC"`
 	}
 
 	if err = json.Unmarshal(file, &cfg); err != nil {
@@ -185,4 +189,5 @@ func (settings *SettingsList) setConfigFile() {
 		settings.CryptoKey = cfg.CryptoKey
 	}
 
+	settings.UseGRPC = cfg.GRPC
 }

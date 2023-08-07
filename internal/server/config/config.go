@@ -1,4 +1,4 @@
-// Package config служит для определения настроек серевера сбора метрик
+// Package config служит для определения настроек сервера сбора метрик
 package config
 
 import (
@@ -28,6 +28,7 @@ type SettingsList struct {
 	CryptoKey     string        // Ключ шифрования
 	TrustedSubnet string        // Доверенная подсеть
 	configFile    string        // Файл с настройками
+	GRPCAddr      string        // Адрес для получения метрик через gRPC
 }
 
 // Config возвращает настройки агента из переменных окружения или флагов запуска.
@@ -71,7 +72,7 @@ func (settings *SettingsList) setConfigFlags() {
 	flag.StringVar(&settings.configFile, "c", settings.configFile, "config")
 	flag.StringVar(&settings.configFile, "config", settings.configFile, "config")
 	flag.StringVar(&settings.TrustedSubnet, "t", settings.configFile, "trusted subnet")
-
+	flag.StringVar(&settings.GRPCAddr, "g", settings.GRPCAddr, "gRPC host to listen on")
 	flag.Parse()
 
 }
@@ -79,6 +80,7 @@ func (settings *SettingsList) setConfigFlags() {
 func (settings *SettingsList) setConfigEnv() {
 	var cfg struct {
 		Addr          string `env:"ADDRESS"`
+		GRPCAddr      string `env:"GRPC_ADDR"`
 		StoreInterval string `env:"STORE_INTERVAL"`
 		StoreFile     string `env:"STORE_FILE"`
 		Restore       string `env:"RESTORE"`
@@ -99,6 +101,9 @@ func (settings *SettingsList) setConfigEnv() {
 		settings.Addr = cfg.Addr
 	}
 
+	if len(strings.TrimSpace(cfg.GRPCAddr)) != 0 {
+		settings.GRPCAddr = cfg.GRPCAddr
+	}
 	if len(strings.TrimSpace(cfg.StoreInterval)) != 0 {
 		settings.StoreInterval, err = time.ParseDuration(cfg.StoreInterval)
 		if err != nil {
@@ -143,6 +148,10 @@ func (settings *SettingsList) setUnspecified() {
 		settings.Addr = "127.0.0.1:8080"
 	}
 
+	if settings.GRPCAddr == "" {
+		settings.GRPCAddr = "127.0.0.1:3200"
+	}
+
 	if settings.StoreInterval == 0 {
 		settings.StoreInterval = 120 * time.Second
 	}
@@ -163,6 +172,7 @@ func (settings *SettingsList) setConfigFile() {
 
 	var cfg struct {
 		Addr          string `json:"address"`
+		GRPCAddr      string `json:"grpc_address"`
 		Restore       bool   `json:"restore"`
 		StoreInterval string `json:"store_interval"`
 		StoreFile     string `json:"store_file"`
@@ -207,4 +217,7 @@ func (settings *SettingsList) setConfigFile() {
 		settings.TrustedSubnet = cfg.TrustedSubnet
 	}
 
+	if settings.GRPCAddr == "" {
+		settings.GRPCAddr = cfg.GRPCAddr
+	}
 }
