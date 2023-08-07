@@ -1,4 +1,4 @@
-// сервис для сбора метрик ОС
+// Сервис для сбора метрик ОС
 package main
 
 import (
@@ -98,6 +98,12 @@ func main() {
 				atomic.StoreInt32(&sendingInProgress, 1)
 				metrics.CalculateMetrics()
 
+				if settings.UseGRPC {
+					err := sender.GRPCSender(settings.Addr, metrics, settings.Key)
+					if err != nil {
+						logs.Logger().Println(err.Error())
+					}
+				}
 				err := sender.SendMetrics(settings.Addr, metrics, settings.Key, settings.RateLimit, settings.CryptoKey)
 				if err != nil {
 					logs.Logger().Println(err.Error())

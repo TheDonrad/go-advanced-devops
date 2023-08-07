@@ -1,8 +1,9 @@
-// сервис для хранения метрик ОС и получения их значений
+// Сервис для хранения метрик ОС и получения их значений
 package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,14 +12,17 @@ import (
 
 	"goAdvancedTpl/internal/fabric/logs"
 	"goAdvancedTpl/internal/fabric/onstart"
+	"goAdvancedTpl/internal/fabric/proto"
 	"goAdvancedTpl/internal/fabric/storage/dbstorage"
 	"goAdvancedTpl/internal/fabric/storage/filestorage"
 	"goAdvancedTpl/internal/server/config"
+	"goAdvancedTpl/internal/server/grpcserver"
 	"goAdvancedTpl/internal/server/handlers"
 	"goAdvancedTpl/internal/server/servermiddleware"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -33,17 +37,20 @@ func main() {
 
 	srvConfig := config.Config()
 
+	s := grpc.NewServer()
 	var h *handlers.APIHandler
+
 	if srvConfig.DBConnString != "" {
 		metStorage := dbstorage.NewDBStorage(srvConfig.DBConnString, srvConfig.Restore)
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
-
+		proto.RegisterMetricsServer(s, grpcserver.NewServer(metStorage, srvConfig.Key))
 	} else {
 		metStorage := filestorage.NewFileStorage(srvConfig.StoreInterval, srvConfig.StoreFile, srvConfig.Restore)
 		h = handlers.NewAPIHandler(metStorage, srvConfig.Key)
+		proto.RegisterMetricsServer(s, grpcserver.NewServer(metStorage, srvConfig.Key))
 	}
 
-	r := routers(h, srvConfig.CryptoKey)
+	r := routers(h, srvConfig.CryptoKey, srvConfig.TrustedSubnet)
 	server := http.Server{Addr: srvConfig.Addr, Handler: r}
 
 	idleConnClosed := make(chan struct{})
@@ -64,16 +71,28 @@ func main() {
 		logs.Logger().Println(err.Error())
 	}
 
+	listen, err := net.Listen("tcp", srvConfig.GRPCAddr)
+	if err != nil {
+		logs.Logger().Println(err.Error())
+	}
+
+	if err = s.Serve(listen); err != nil {
+		logs.Logger().Println(err.Error())
+	}
+
 	<-idleConnClosed
 	time.Sleep(12 * time.Second)
 }
 
-func routers(h *handlers.APIHandler, cryptoKey string) *chi.Mux {
+func routers(h *handlers.APIHandler, cryptoKey string, trustedSubnet string) *chi.Mux {
 
 	r := chi.NewRouter()
 	r.Use(middleware.Compress(5))
 	r.Use(servermiddleware.GzipHandle)
 	r.Use(servermiddleware.Decryption(cryptoKey))
+	if trustedSubnet != "" {
+		r.Use(servermiddleware.CheckIP(trustedSubnet))
+	}
 	r.Route("/update", func(r chi.Router) {
 		r.Post("/", h.WriteWholeMetric)
 		r.Post("/{metricType}/{metricName}/{metricValue}", h.WriteMetric)

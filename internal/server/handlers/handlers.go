@@ -25,12 +25,12 @@ type IStorage interface {
 }
 
 type Metric struct {
-	ID    string `json:"id"`              // имя метрики
+	ID    string `json:"id"`              // Имя метрики
 	MType string `json:"type"`            // параметр, принимающий значение gauge или counter
-	Hash  string `json:"hash,omitempty"`  // значение хеш-функции
-	Delta int64  `json:"delta,omitempty"` // значение метрики в случае передачи counter
+	Hash  string `json:"hash,omitempty"`  // Значение хеш-функции
+	Delta int64  `json:"delta,omitempty"` // Значение метрики в случае передачи counter
 	// TODO: проверить указатель и без omitempty
-	Value float64 `json:"value,omitempty"` // значение метрики в случае передачи gauge
+	Value float64 `json:"value,omitempty"` // Значение метрики в случае передачи gauge
 }
 
 type APIHandler struct {
@@ -46,7 +46,7 @@ func NewAPIHandler(metrics IStorage, key string) (h *APIHandler) {
 	return
 }
 
-// WriteMetric записывает метрику переданную в адресе HTTP-запроса
+// WriteMetric записывает метрику, переданную в адресе HTTP-запроса
 func (h *APIHandler) WriteMetric(w http.ResponseWriter, r *http.Request) {
 	metricType := chi.URLParam(r, "metricType")
 	metricType = strings.ToLower(metricType)

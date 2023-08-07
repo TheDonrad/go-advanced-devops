@@ -1,4 +1,4 @@
-// Package collector предназначет для сбора метрик, а также манипуляций над ними
+// Package collector предназначен для сбора метрик, а также манипуляций над ними
 package collector
 
 import (
@@ -77,7 +77,7 @@ func (metrics *MetricsList) SetAdditionalMetrics() {
 	metrics.Gauge["CPUutilization1"] = c[0] + rand.Float64()
 }
 
-// CalculateMetrics рассчитывет среднее значение метрик перед отправкой на сервер
+// CalculateMetrics рассчитывает среднее значение метрик перед отправкой на сервер
 func (metrics *MetricsList) CalculateMetrics() {
 	if metrics.Counter[counter] == 0 {
 		return
